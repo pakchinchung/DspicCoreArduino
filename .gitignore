@@ -1,0 +1,53 @@
+# Microchip XC-DSC GPL source archives (downloaded locally; do not commit/redistribute here)
+*.src.zip
+v*.src.zip
+xc-dsc-*src*
+xc16-*src*
+
+# Build artifacts
+/build/
+*.o
+*.d
+*.elf
+*.hex
+*.map
+
+# Phase 1 compiler build tree
+spike/phase1/cc1plus-build/
+
+# IDE files
+.vscode/
+*.launch
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Arduino IDE cache
+*.tmp
+
+# Compiler rebuild outputs
+tools/build/obj/
+tools/build/out/
+tools/build/verify-tmp/
+
+# Build logs
+tools/build/build.log
+tools/build/wsl-build.log
+
+# dsPIC build artifacts in spike
+spike/phase1/*.s
+spike/phase1/*.elf
+spike/phase1/*.hex
+tools/build/winbuild.log
+tools/build/winbuild2.log
+
+# dsPIC build artifacts in spike/phase2
+spike/phase2/*.s
+spike/phase2/*.elf
+spike/phase2/*.hex
+spike/phase2/*.mdb
+spike/phase2/*_win.*
+
+# Bundled compiler (unpacked for local test/packaging; repo keeps the .tar.bz2)
+tools/xc16pp/dspic-cpp-toolchain-win/

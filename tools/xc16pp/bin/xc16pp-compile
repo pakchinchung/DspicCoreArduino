@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# xc16pp-compile — invoke the C/C++/asm front-end for dsPIC (macOS/Linux).
+# Windows uses xc16pp-compile.bat (Arduino runs recipes without a shell).
+#
+#   C   -> stock xc-dsc-gcc (from the user's XC-DSC install)
+#   C++ -> our GPL-rebuilt elf-g++ + cc1plus (the point of this project); it
+#          drives the stock xc-dsc assembler (found via -B) so a single -c
+#          produces the .o directly.
+#   asm -> stock xc-dsc-as
+#
+# Device headers/libs come from the DFP (-mdfp) + XC-DSC install, both located
+# at build time by xc16pp-env.sh. Neither is bundled here (Microchip-supplied).
+#
+# Usage (from platform.txt):
+#   xc16pp-compile -lang=c|cpp|asm -mcu=<DEV> [flags] {includes} "src" -o "out.o"
+set -e
+source "$(dirname "$0")/xc16pp-env.sh"
+
+LANG="" ; MCU="" ; PASS=()
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -lang=*) LANG="${1#-lang=}" ;;
+        -mcu=*)  MCU="${1#-mcu=}"   ;;
+        *)       PASS+=("$1")       ;;
+    esac
+    shift
+done
+[ -z "$MCU" ] && { echo "ERROR: -mcu=<device> required" >&2; exit 1; }
+
+XCDSC=$(find_xcdsc) || die_no_xcdsc
+XCDSC_BIN="$XCDSC/bin"
+XC=$(detect_prefix "$XCDSC_BIN")
+DFP_ROOT=$(find_dfp_root "$MCU") || die_no_dfp "$MCU"
+
+case "$LANG" in
+    c)
+        exec "$XCDSC_BIN/${XC}-gcc" -mcpu="$MCU" -mdfp="$DFP_ROOT" "${PASS[@]}"
+        ;;
+    cpp)
+        GPP=$(_find_our_gpp) || {
+            echo "ERROR: bundled C++ compiler not found under $OUR_TC" >&2
+            echo "       (only the Windows build currently ships; build for this OS to enable C++ here)" >&2
+            exit 1
+        }
+        # -B <our libexec> finds cc1plus; -B <XC-DSC bin> finds xc-dsc-as so a
+        # single -c assembles to .o. -I <XC-DSC>/include supplies target stdint.h
+        # etc. (our compiler is --without-headers). The C++ compat shim is added
+        # by platform.txt (it knows the core path).
+        exec "$GPP" \
+            -mcpu="$MCU" -mdfp="$DFP_ROOT" \
+            -B"$(_our_libexec)" -B"$XCDSC_BIN" \
+            -I"$XCDSC/include" \
+            "${PASS[@]}"
+        ;;
+    asm)
+        exec "$XCDSC_BIN/${XC}-as" -mcpu="$MCU" -mdfp="$DFP_ROOT" "${PASS[@]}"
+        ;;
+    *)
+        echo "ERROR: -lang must be c, cpp, or asm (got '$LANG')" >&2
+        exit 1
+        ;;
+esac

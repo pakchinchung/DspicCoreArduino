@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# xc16pp-ar — archive object files into the core static lib.
+set -e
+source "$(dirname "$0")/xc16pp-env.sh"
+XCDSC=$(find_xcdsc) || die_no_xcdsc
+XC=$(detect_prefix "$XCDSC/bin")
+exec "$XCDSC/bin/${XC}-ar" "$@"

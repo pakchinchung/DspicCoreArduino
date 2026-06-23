@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# xc16pp-size — report ELF section sizes via xc-dsc-objdump.
+set -e
+source "$(dirname "$0")/xc16pp-env.sh"
+XCDSC=$(find_xcdsc) || die_no_xcdsc
+XC=$(detect_prefix "$XCDSC/bin")
+exec "$XCDSC/bin/${XC}-objdump" --section-headers "$@"

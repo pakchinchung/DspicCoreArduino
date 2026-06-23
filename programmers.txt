@@ -1,0 +1,19 @@
+##############################################################
+# dspicArduino Core — programmers.txt
+##############################################################
+
+pickit4.name=PICkit 4
+pickit4.protocol=pickit4
+pickit4.program.tool=pickit4
+
+pickit4nano.name=PICkit 4 Nano
+pickit4nano.protocol=pickit4
+pickit4nano.program.tool=pickit4
+
+snap.name=MPLAB SNAP
+snap.protocol=snap
+snap.program.tool=pickit4
+
+icd4.name=MPLAB ICD 4
+icd4.protocol=icd4
+icd4.program.tool=pickit4

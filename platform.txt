@@ -1,0 +1,77 @@
+##############################################################
+# dspicArduino Core - platform.txt
+# Arduino IDE/CLI uses these recipes to compile and link sketches.
+#
+# Cross-OS execution: recipes call the xc16pp-* wrappers. Windows runs them
+# WITHOUT a shell, so we provide .windows overrides that call the .bat wrappers
+# (positional "lang mcu ..." args); the unsuffixed recipes are the .sh wrappers
+# used on macOS/Linux. The wrappers locate the user's XC-DSC install + DFP and
+# our bundled GPL C++ compiler at build time (see tools/xc16pp/).
+##############################################################
+
+name=dspicArduino Core
+version=0.1.0
+
+compiler.path={runtime.platform.path}/tools/xc16pp/bin/
+
+# ---- flags -------------------------------------------------------------------
+compiler.warning_flags=-Wall
+compiler.dspic.flags=-mcpu={build.mcu} -omf=elf
+compiler.opt=-Os
+
+# The C++ compat shim (cores/dspic/dspic_cpp_compat.h) MUST be force-included
+# ahead of <xc.h> so the pic30 __prog__ address-space keyword parses in C++.
+compiler.cpp.compat=-include "{build.core.path}/dspic_cpp_compat.h"
+
+compiler.c.flags=-c -g {compiler.opt} -ffunction-sections -fdata-sections -MMD
+compiler.cpp.flags=-c -g {compiler.opt} {compiler.cpp.compat} -fno-exceptions -fno-rtti -fno-threadsafe-statics -ffunction-sections -fdata-sections -MMD
+compiler.S.flags=-c -g -x assembler-with-cpp
+compiler.ar.flags=rcs
+# --undefined=_main forces main() to be pulled from core.a (only crt0 references
+# it, and crt0 is scanned after the archive). It is also a --gc-sections root.
+compiler.ld.flags=-omf=elf -Wl,--gc-sections -Wl,--undefined=_main -Wl,--defsym=__MPLAB_BUILD=1
+
+##############################################################
+# Compile recipes  (unsuffixed = macOS/Linux .sh ; .windows = .bat)
+##############################################################
+
+# --- C ---
+recipe.c.o.pattern="{compiler.path}xc16pp-compile" -lang=c -mcu={build.mcu} {compiler.c.flags} {compiler.warning_flags} {build.extra_flags} {includes} "{source_file}" -o "{object_file}"
+recipe.c.o.pattern.windows="{compiler.path}xc16pp-compile.bat" c {build.mcu} {compiler.c.flags} {compiler.warning_flags} {build.extra_flags} {includes} "{source_file}" -o "{object_file}"
+
+# --- C++ ---
+recipe.cpp.o.pattern="{compiler.path}xc16pp-compile" -lang=cpp -mcu={build.mcu} {compiler.cpp.flags} {compiler.warning_flags} {build.extra_flags} {includes} "{source_file}" -o "{object_file}"
+recipe.cpp.o.pattern.windows="{compiler.path}xc16pp-compile.bat" cpp {build.mcu} {compiler.cpp.flags} {compiler.warning_flags} {build.extra_flags} {includes} "{source_file}" -o "{object_file}"
+
+# --- Assembler ---
+recipe.S.o.pattern="{compiler.path}xc16pp-compile" -lang=asm -mcu={build.mcu} {compiler.S.flags} {includes} "{source_file}" -o "{object_file}"
+recipe.S.o.pattern.windows="{compiler.path}xc16pp-compile.bat" asm {build.mcu} {compiler.S.flags} {includes} "{source_file}" -o "{object_file}"
+
+# --- Archive (core library) ---
+recipe.ar.pattern="{compiler.path}xc16pp-ar" {compiler.ar.flags} "{archive_file_path}" "{object_file}"
+recipe.ar.pattern.windows="{compiler.path}xc16pp-ar.bat" {compiler.ar.flags} "{archive_file_path}" "{object_file}"
+
+# --- Link ---
+recipe.c.combine.pattern="{compiler.path}xc16pp-link" -mcu={build.mcu} {compiler.ld.flags} -o "{build.path}/{build.project_name}.elf" {object_files} "{archive_file_path}" -lm
+recipe.c.combine.pattern.windows="{compiler.path}xc16pp-link.bat" {build.mcu} {compiler.ld.flags} -o "{build.path}/{build.project_name}.elf" {object_files} "{archive_file_path}" -lm
+
+# --- Intel HEX ---
+recipe.objcopy.hex.pattern="{compiler.path}xc16pp-hex" {build.mcu} "{build.path}/{build.project_name}.elf" "{build.path}/{build.project_name}.hex"
+recipe.objcopy.hex.pattern.windows="{compiler.path}xc16pp-hex.bat" {build.mcu} "{build.path}/{build.project_name}.elf" "{build.path}/{build.project_name}.hex"
+
+# --- Size ---
+recipe.size.pattern="{compiler.path}xc16pp-size" "{build.path}/{build.project_name}.elf"
+recipe.size.pattern.windows="{compiler.path}xc16pp-size.bat" "{build.path}/{build.project_name}.elf"
+recipe.size.regex=^\s*\d+\s+\.text\s+([0-9a-f]+).*
+recipe.size.regex.data=^\s*\d+\s+\.(?:data|bss|nbss)\s+([0-9a-f]+).*
+
+##############################################################
+# Upload via MPLAB IPE command line (on-board PICkit / PICkit 4 / PICkit 5).
+# The selected programmer's IPE tool code comes from {upload.tp} (boards.txt
+# menu). No Arduino bootloader.
+##############################################################
+tools.ipe.cmd.path={runtime.platform.path}/tools/xc16pp/bin/
+tools.ipe.upload.params.verbose=-v4
+tools.ipe.upload.params.quiet=-v0
+tools.ipe.upload.pattern="{tools.ipe.cmd.path}xc16pp-flash" -mcu={build.mcu} -tp={upload.tp} -hex="{build.path}/{build.project_name}.hex" {upload.verbose}
+tools.ipe.upload.pattern.windows="{tools.ipe.cmd.path}xc16pp-flash.bat" -mcu={build.mcu} -tp={upload.tp} -hex="{build.path}/{build.project_name}.hex" {upload.verbose}
