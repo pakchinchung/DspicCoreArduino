@@ -1,0 +1,29 @@
+##############################################################
+# dspicArduino Core - programmers.txt
+# Select under Tools > Programmer, then "Upload Using Programmer"
+# (no Arduino bootloader). Each entry maps to an MPLAB IPE -TP tool code.
+##############################################################
+
+pkob4.name=On-board PICkit (PKoB4)
+pkob4.program.tool=ipe
+pkob4.program.tp=PKOB4
+
+pickit4.name=PICkit 4
+pickit4.program.tool=ipe
+pickit4.program.tp=PK4
+
+pickit5.name=PICkit 5
+pickit5.program.tool=ipe
+pickit5.program.tp=PK5
+
+pkob.name=On-board PICkit (PKoB3)
+pkob.program.tool=ipe
+pkob.program.tp=PKOB
+
+snap.name=MPLAB SNAP
+snap.program.tool=ipe
+snap.program.tp=SNAP
+
+icd4.name=MPLAB ICD 4
+icd4.program.tool=ipe
+icd4.program.tp=ICD4

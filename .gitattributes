@@ -1,0 +1,10 @@
+# Normalise line endings
+* text=auto
+
+# Shell scripts must stay LF on all platforms (Windows bash will break on CRLF)
+tools/xc16pp/bin/* text eol=lf
+
+# Source files
+*.c   text eol=lf
+*.cpp text eol=lf
+*.h   text eol=lf
