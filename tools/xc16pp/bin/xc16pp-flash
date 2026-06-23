@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# xc16pp-flash — flash a .hex file using MPLAB IPE command-line tool (ipecmd).
+# Requires MPLAB X IDE installed (provides ipecmd.jar).
+#
+# Usage (set by platform.txt upload recipe):
+#   xc16pp-flash -mcu=<device> -tp=<PKOB|PK4|PK5> -hex=<file.hex> [-v4|-v0]
+# -tp is the MPLAB IPE tool code passed straight to ipecmd -TP. No bootloader.
+
+set -e
+
+TP="PK4"
+VERBOSE=""
+MCU=""
+HEX=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -mcu=*)   MCU="${1#-mcu=}"  ;;
+        -tp=*)    TP="${1#-tp=}"    ;;
+        -hex=*)   HEX="${1#-hex=}"  ;;
+        -v4)      VERBOSE="-v4"     ;;
+        -v0)      VERBOSE="-v0"     ;;
+    esac
+    shift
+done
+
+# Locate MPLAB X ipecmd.jar
+find_ipecmd() {
+    for base in \
+        "/c/Program Files/Microchip/MPLABX" \
+        "/Applications/microchip/mplabx"    \
+        "/opt/microchip/mplabx"; do
+        [ -d "$base" ] && {
+            ver=$(ls -1 "$base" 2>/dev/null | grep -E '^v[0-9]' | sort -V | tail -1)
+            jar="$base/$ver/mplab_platform/mplab_ipe/ipecmd.jar"
+            [ -f "$jar" ] && { echo "$jar"; return; }
+        }
+    done
+    echo "ERROR: MPLAB X ipecmd.jar not found. Install MPLAB X IDE from microchip.com." >&2
+    exit 1
+}
+
+IPECMD_JAR=$(find_ipecmd)
+
+# -TP receives the IPE tool code directly (PKOB / PK4 / PK5). -M = program device.
+exec java -jar "$IPECMD_JAR" \
+    -P"$MCU" \
+    -TP"$TP" \
+    -F"$HEX" \
+    -M \
+    $VERBOSE

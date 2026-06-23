@@ -1,0 +1,62 @@
+##############################################################
+# dspicArduino Core - boards.txt
+# Supported families: dsPIC33CK and dsPIC33AK (generic chip support).
+# Pins are chosen by native name in the sketch (e.g. #define LED_USER RE6).
+# Programming is via MPLAB IPE (on-board PICkit / PICkit 4 / PICkit 5).
+# No Arduino bootloader.
+##############################################################
+
+# Select the programmer under Tools > Programmer (programmers.txt), then use
+# "Upload Using Programmer". After-upload reset behavior is a board menu below.
+menu.reset=After Upload
+
+##############################################################
+# dsPIC33CK256MP508 (generic)
+##############################################################
+dspic33ck256mp508.name=dsPIC33CK256MP508 (generic)
+
+dspic33ck256mp508.build.mcu=33CK256MP508
+dspic33ck256mp508.build.f_cpu=100000000UL
+dspic33ck256mp508.build.board=DSPIC33CK256MP508
+dspic33ck256mp508.build.core=dspic
+dspic33ck256mp508.build.variant=dspic33ck256mp508
+dspic33ck256mp508.build.extra_flags=
+
+dspic33ck256mp508.upload.tool=ipe
+dspic33ck256mp508.upload.protocol=ipe
+dspic33ck256mp508.upload.reset=run
+dspic33ck256mp508.upload.tp=PKOB4
+dspic33ck256mp508.program.tool=ipe
+dspic33ck256mp508.upload.maximum_size=262144
+dspic33ck256mp508.upload.maximum_data_size=49152
+
+dspic33ck256mp508.menu.reset.run=Run sketch (release reset)
+dspic33ck256mp508.menu.reset.run.upload.reset=run
+dspic33ck256mp508.menu.reset.hold=Hold in reset
+dspic33ck256mp508.menu.reset.hold.upload.reset=hold
+
+##############################################################
+# dsPIC33AK128MC106  (dsPIC33A family, 32-bit; experimental)
+#   C++ runtime on AK is not yet hardware-verified (docs/DSPIC33A_STATUS.md).
+##############################################################
+dspic33ak128mc106.name=dsPIC33AK128MC106 (experimental)
+
+dspic33ak128mc106.build.mcu=33AK128MC106
+dspic33ak128mc106.build.f_cpu=100000000UL
+dspic33ak128mc106.build.board=DSPIC33AK128MC106
+dspic33ak128mc106.build.core=dspic
+dspic33ak128mc106.build.variant=dspic33ak128mc106
+dspic33ak128mc106.build.extra_flags=
+
+dspic33ak128mc106.upload.tool=ipe
+dspic33ak128mc106.upload.protocol=ipe
+dspic33ak128mc106.upload.reset=run
+dspic33ak128mc106.upload.tp=PKOB4
+dspic33ak128mc106.program.tool=ipe
+dspic33ak128mc106.upload.maximum_size=131072
+dspic33ak128mc106.upload.maximum_data_size=16384
+
+dspic33ak128mc106.menu.reset.run=Run sketch (release reset)
+dspic33ak128mc106.menu.reset.run.upload.reset=run
+dspic33ak128mc106.menu.reset.hold=Hold in reset
+dspic33ak128mc106.menu.reset.hold.upload.reset=hold

@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# xc16pp-link — link objects + core archive into an ELF.
+# Driven through xc-dsc-gcc so the device .gld linker script and runtime libs
+# (from the DFP + compiler install) are selected automatically by -mcpu.
+set -e
+source "$(dirname "$0")/xc16pp-env.sh"
+
+MCU="" ; PASS=()
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -mcu=*) MCU="${1#-mcu=}" ;;
+        *)      PASS+=("$1")     ;;
+    esac
+    shift
+done
+[ -z "$MCU" ] && { echo "ERROR: -mcu=<device> required" >&2; exit 1; }
+
+XCDSC=$(find_xcdsc) || die_no_xcdsc
+XC=$(detect_prefix "$XCDSC/bin")
+DFP_ROOT=$(find_dfp_root "$MCU")  || die_no_dfp "$MCU"
+GLD=$(find_device_gld "$MCU")     || die_no_dfp "$MCU"
+
+# Verified in the Phase 1 spike: the linker falls back to a wrong default
+# (30Fxxxx) unless the device .gld is passed explicitly with -T. -mdfp supplies
+# the processor support lib + crt0.
+exec "$XCDSC/bin/${XC}-gcc" \
+    -mcpu="$MCU" \
+    -mdfp="$DFP_ROOT" \
+    -T"$GLD" \
+    "${PASS[@]}"

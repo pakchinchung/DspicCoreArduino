@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# xc16pp-hex — ELF -> Intel HEX via xc-dsc-bin2hex.
+set -e
+source "$(dirname "$0")/xc16pp-env.sh"
+XCDSC=$(find_xcdsc) || die_no_xcdsc
+XC=$(detect_prefix "$XCDSC/bin")
+# bin2hex writes <input>.hex next to the ELF.
+exec "$XCDSC/bin/${XC}-bin2hex" "$1" -omf=elf
