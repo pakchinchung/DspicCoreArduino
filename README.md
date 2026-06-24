@@ -1,123 +1,123 @@
 # dspicArduino Core
 
 An Arduino core that lets **standard, unmodified Arduino sketches run on Microchip
-dsPIC** microcontrollers. The same `blink` or button sketch that works on an Uno
-or an STM32 board compiles and runs on a dsPIC33 — the user writes ordinary
-Arduino code and never has to know what happens underneath.
+dsPIC33** microcontrollers — including **C++** sketches and libraries, which
+Microchip's stock compiler normally disables. Write ordinary Arduino code, pick
+your pins by their datasheet names, and it compiles and runs on a dsPIC33.
 
-> **Status: early development.** The toolchain and core scaffold are in place and
-> the C++ feasibility is proven on silicon (see below). The first end-to-end goal
-> is **blink an LED + respond to a button press**.
-
----
-
-## Why this is non-trivial (and how it's solved)
-
-The Arduino API is C++ (`Serial`, `Wire`, `LiquidCrystal`, `String`, classes with
-virtual methods…). Microchip's dsPIC compiler — **XC16 / XC-DSC** — ships with the
-**C++ front-end disabled**, which is why no dsPIC Arduino core has existed.
-
-This project's approach:
-
-1. **Rebuild the compiler with C++ enabled.** XC-DSC is GCC (v3.31 = GCC 8.3.1).
-   The C++ front-end is present in Microchip's GPL source but turned off; we
-   rebuild it with `--enable-languages=c,c++`. This is legal under the GPLv3 that
-   covers the GCC components (Microchip's EULA §4 defers to the OSS licenses for
-   those binaries). See [`PLAN.md`](PLAN.md) and
-   [`docs/BUILDING_THE_COMPILER.md`](docs/BUILDING_THE_COMPILER.md).
-2. **Don't redistribute Microchip's proprietary parts.** Device headers, runtime,
-   and linker scripts stay in the user's own XC-DSC install; our wrappers locate
-   them at build time. We ship only the GPL compiler + our Arduino core.
-3. **Implement the Arduino API** (`pinMode`, `digitalWrite`, `millis`,
-   `HardwareSerial`, `Wire`, `SPI`, …) against dsPIC peripherals so stock sketches
-   and libraries compile unchanged.
-
-### Proven: the dsPIC runtime already supports C++
-
-A Phase 1 spike confirmed on the MPLAB X simulator (using only the stock compiler)
-that Microchip's `crt0` already calls static constructors before `main()` and that
-vtable-style indirect dispatch works — so global objects and virtual methods will
-work once `cc1plus` is built. Details in [`spike/phase1/README.md`](spike/phase1/README.md).
+> **Status: working (v0.1.4).** Full Arduino HAL implemented and verified on
+> hardware (digital I/O, `Serial`, `Wire`/I²C, `SPI`, `analogRead`, `analogWrite`
+> PWM, and DAC). Standard libraries compile against it — e.g. a 16×2 I²C LCD runs
+> on the stock **LiquidCrystal_I2C** library.
 
 ---
 
-## Repository layout
+## Features
 
-```
-boards.txt / platform.txt / programmers.txt   Arduino boards-manager definitions
-package_dspicArduino_index.json               Boards Manager URL manifest
-cores/dspic/                                   The Arduino API implementation
-variants/dspic33ck256mp508/                    Per-board pin map + clock/config
-tools/xc16pp/bin/                              Compiler wrappers (locate XC-DSC + DFP)
-tools/build/                                   Scripts to build the C++ compiler
-spike/phase1/                                  C++ feasibility proof + acceptance test
-docs/BUILDING_THE_COMPILER.md                  How to (re)build the C++ compiler
-PLAN.md                                         Full phased roadmap
-```
+- **Standard Arduino API** — `pinMode`/`digitalWrite`/`digitalRead`, `millis`/
+  `micros`/`delay`, `Serial` (`HardwareSerial`/`Print`/`String`), `Wire` (I²C),
+  `SPI`, `analogRead`, `analogWrite` (PWM), `dacWrite`, `tone`-style timing, etc.
+- **Real C++** — classes, virtual methods, global constructors all work (the core
+  ships a C++-enabled build of Microchip's own GCC; see *Licensing*).
+- **Pins by native name** — `#define LED RE6; pinMode(LED, OUTPUT);`. No
+  board-specific remap to memorize — any pin on the chip, by its datasheet name.
+- **Multiple peripherals** — every UART/SPI/I²C instance is exposed:
+  `Serial`/`Serial1`/`Serial2`, `Wire`/`Wire1`/`Wire2`, `SPI`/`SPI_2`/`SPI_3`.
+- **Stock-library compatible** — `ARDUINO`/`ARDUINO_ARCH_DSPIC` defines, `binary.h`,
+  and an `avr/pgmspace.h` shim, so most libraries that use `Wire`/`SPI`/`PROGMEM`
+  compile unchanged.
+- **Upload with no bootloader** — flashes via MPLAB IPE (`ipecmd`) using the
+  on-board PKoB4 or an external PICkit 4/5 / SNAP / ICD 4.
+- **Bench tooling** — chip erase + "build once, flash many" mass-programming
+  scripts in [`tools/production/`](tools/production/).
 
----
+## Supported boards
 
-## Getting started (developers)
-
-Currently you build the C++-enabled compiler, then use the core from the Arduino IDE.
-
-### Prerequisites
-- Windows with **MPLAB XC-DSC** and **MPLAB X IDE** installed (provides the device
-  packs, runtime libraries, and the simulator/programmer).
-- A dsPIC33CK board or the MPLAB X **Simulator** (no hardware required to test).
-
-### Build the C++ compiler (Phase 1)
-Build the compiler in WSL Ubuntu (gcc-11 host), then verify on the simulator:
-
-```bash
-# one-time deps:
-sudo apt install -y build-essential gcc-11 g++-11 bison flex \
-     libgmp-dev libmpfr-dev libmpc-dev libisl-dev texinfo libexpat1-dev
-# build the C++-enabled compiler:
-HOST_CC=gcc-11 HOST_CXX=g++-11 bash tools/build/build-on-wsl.sh
-# verify on the MPLAB X simulator (no hardware):
-tools/test/run-cpp-sim-test.sh 33CK256MP508
-```
-
-Success looks like:
-```
-=== PASS — C++ verified on 33CK256MP508 ===
-```
-
-Full details (every issue + fix, new-version checklist) in
-[`docs/BUILD_JOURNEY.md`](docs/BUILD_JOURNEY.md) and
-[`docs/BUILDING_THE_COMPILER.md`](docs/BUILDING_THE_COMPILER.md).
-
-Full instructions: [`docs/BUILDING_THE_COMPILER.md`](docs/BUILDING_THE_COMPILER.md).
+| Board | MCU | Notes |
+|-------|-----|-------|
+| dsPIC33CK256MP508 (generic) | dsPIC33CK256MP508 | Primary target (e.g. DM330030 Curiosity) |
+| dsPIC33AK128MC106 (experimental) | dsPIC33AK128MC106 | Compiles/links; C++-on-hardware still being validated |
 
 ---
 
-## Roadmap
+## Install
 
-| Phase | Goal | Status |
-|------:|------|--------|
-| 1 | Build C++-enabled compiler; prove on silicon | runtime proven; build pending |
-| 2 | Core + **blink** (clock, Timer1, `pinMode`/`digitalWrite`) | scaffolded |
-| 3 | **Button** (`digitalRead`, `INPUT_PULLUP`) — MVP target | scaffolded |
-| 4 | `HardwareSerial` / `Print` / `String` | stubs |
-| 5 | `analogRead` / `analogWrite` | stubs |
-| 6 | `Wire` (I²C) / `SPI` | planned |
-| 7 | Boards-manager packaging + release | planned |
-| 8 | More boards/variants | planned |
+You need three things — the Arduino package (this repo) plus two **free** Microchip
+downloads it relies on (their proprietary parts are *not* redistributed here):
 
-See [`PLAN.md`](PLAN.md) for the detailed plan.
+1. **MPLAB XC-DSC compiler** — provides the assembler, libraries, and target C
+   headers. <https://www.microchip.com/xcdsc>
+2. **MPLAB X IDE** — provides the **Device Family Packs** (the `<xc.h>` headers,
+   `.gld` linker scripts) and `ipecmd` used for upload. <https://www.microchip.com/mplabx>
+3. **This board package** — in Arduino IDE:
+   - **File ▸ Preferences ▸ Additional Boards Manager URLs**, add:
+     ```
+     https://raw.githubusercontent.com/pakchinchung/DspicCoreArduino/master/package_dspicArduino_index.json
+     ```
+   - **Tools ▸ Board ▸ Boards Manager**, search **dspic**, install **dspicArduino Core**.
+
+> Tip: after a new version is published the IDE may keep a cached index. If the
+> latest version doesn't appear, remove and re-add the URL (or delete the cached
+> `…/Arduino15/package_dspicArduino_index.json`) and reopen Boards Manager.
+
+---
+
+## Quick start
+
+```cpp
+#define LED RE6              // any pin, by datasheet name
+
+void setup() {
+  pinMode(LED, OUTPUT);
+  Serial.begin(9600);        // PKoB4 virtual COM
+}
+void loop() {
+  digitalWrite(LED, HIGH); delay(500);
+  digitalWrite(LED, LOW);  delay(500);
+  Serial.println("blink");
+}
+```
+
+1. **Tools ▸ Board** → *dsPIC33CK256MP508 (generic)*.
+2. **Verify** to compile, **Upload** to flash (on-board PKoB4 — no port/programmer
+   selection needed). For an external programmer: **Tools ▸ Programmer**, then
+   **Sketch ▸ Upload Using Programmer**.
+
+### Peripheral pins
+- **I²C** pins are fixed per module (not remappable). `Wire` (I²C1) defaults to the
+  **alternate** pins **RC8 (SDA) / RC9 (SCL)** on this board; a **Tools ▸ "I2C1
+  pins"** menu switches it to RB9/RB8. `Wire1`/`Wire2` use I²C2/I²C3.
+- **UART** and **SPI** pins are remappable (PPS). `Serial` defaults to the PKoB4
+  COM pins; for `Serial1`/`Serial2` and `SPI_2`/`SPI_3` call `setPins(...)` before
+  `begin()`.
+
+### Examples (File ▸ Examples)
+`Blink`, `SerialEcho`, `CppShowcase`, `PotRGB`, `PwmSweep`, `DacAdcLoopback`,
+`SpiLoopback`, `WireLoopback`, `I2cScanner`, `LcdHelloWorld`, `HalSanity`.
+
+---
+
+## Upload & erase
+
+- **Upload**: MPLAB IPE headless via the on-board PKoB4 (default) or a selected
+  external programmer. **Tools ▸ After Upload** chooses run vs. hold-in-reset.
+- **Erase**: **Tools ▸ Burn Bootloader** performs a full chip erase (this core has
+  no bootloader; the IDE just can't rename that menu item). A standalone
+  `tools/production/dspic-erase.bat` does the same outside the IDE.
+- **Mass-programming**: `tools/production/dspic-tool.bat` flashes the last
+  compiled `.hex` to many boards without recompiling — see
+  [`tools/production/README.md`](tools/production/README.md).
 
 ---
 
 ## Licensing
 
-- The Arduino core, wrappers, and build scripts in this repository: see repository
-  license.
-- The C++-enabled compiler is built from Microchip's **GPLv3** GCC sources;
-  redistributing it carries the GPLv3 obligation to publish the corresponding
-  modified source.
-- Microchip's proprietary components (device headers, runtime, linker scripts) are
-  **not** included here — users obtain them via their own XC-DSC installation.
+- The Arduino core, wrappers, and scripts here: see the repository license.
+- The bundled C++-enabled compiler is built from Microchip's **GPLv3** GCC sources;
+  redistribution carries the GPLv3 obligation to publish the corresponding source.
+- Microchip's proprietary components (device headers, runtime, linker scripts,
+  `ipecmd`) are **not** included — users obtain them via their own XC-DSC / MPLAB X
+  installation.
 
-This project is community-developed and is not an official Microchip or Arduino
+This project is community-developed and is **not** an official Microchip or Arduino
 product.
