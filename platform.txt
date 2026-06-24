@@ -10,7 +10,7 @@
 ##############################################################
 
 name=dspicArduino Core
-version=0.1.3
+version=0.1.4
 
 compiler.path={runtime.platform.path}/tools/xc16pp/bin/
 
@@ -23,13 +23,21 @@ compiler.opt=-Os
 # ahead of <xc.h> so the pic30 __prog__ address-space keyword parses in C++.
 compiler.cpp.compat=-include "{build.core.path}/dspic_cpp_compat.h"
 
-compiler.c.flags=-c -g {compiler.opt} -ffunction-sections -fdata-sections -MMD
-compiler.cpp.flags=-c -g {compiler.opt} {compiler.cpp.compat} -fno-exceptions -fno-rtti -fno-threadsafe-statics -ffunction-sections -fdata-sections -MMD
+# Standard Arduino build defines. Without -DARDUINO, libraries that guard on
+# "#if ARDUINO >= 100" fall back to the ancient WProgram.h and fail to compile.
+# arduino-cli does NOT inject these automatically, so the platform must.
+compiler.defines=-DARDUINO={runtime.ide.version} -DARDUINO_ARCH_DSPIC -DARDUINO_{build.board} -DF_CPU={build.f_cpu}
+
+compiler.c.flags=-c -g {compiler.opt} {compiler.defines} -ffunction-sections -fdata-sections -MMD
+compiler.cpp.flags=-c -g {compiler.opt} {compiler.defines} {compiler.cpp.compat} -fno-exceptions -fno-rtti -fno-threadsafe-statics -ffunction-sections -fdata-sections -MMD
 compiler.S.flags=-c -g -x assembler-with-cpp
 compiler.ar.flags=rcs
 # --undefined=_main forces main() to be pulled from core.a (only crt0 references
-# it, and crt0 is scanned after the archive). It is also a --gc-sections root.
-compiler.ld.flags=-omf=elf -Wl,--gc-sections -Wl,--undefined=_main -Wl,--defsym=__MPLAB_BUILD=1
+# it, and crt0 is scanned after the archive).
+# NOTE: do NOT add -Wl,--gc-sections — on this pic30 toolchain it collects the
+# C++ global constructors (.init/.ctors), so global objects never get
+# constructed (their members stay zero). Keeping all sections is the safe choice.
+compiler.ld.flags=-omf=elf -Wl,--undefined=_main -Wl,--defsym=__MPLAB_BUILD=1
 
 ##############################################################
 # Compile recipes  (unsuffixed = macOS/Linux .sh ; .windows = .bat)
@@ -62,8 +70,8 @@ recipe.objcopy.hex.pattern.windows="{compiler.path}xc16pp-hex.bat" {build.mcu} "
 # --- Size ---
 recipe.size.pattern="{compiler.path}xc16pp-size" {build.mcu} "{build.path}/{build.project_name}.elf"
 recipe.size.pattern.windows="{compiler.path}xc16pp-size.bat" {build.mcu} "{build.path}/{build.project_name}.elf"
-recipe.size.regex=^\s*\d+\s+\.text\s+([0-9a-f]+).*
-recipe.size.regex.data=^\s*\d+\s+\.(?:data|bss|nbss)\s+([0-9a-f]+).*
+recipe.size.regex=^Program bytes:\s+([0-9]+)
+recipe.size.regex.data=^Data bytes:\s+([0-9]+)
 
 ##############################################################
 # Upload via MPLAB IPE command line (on-board PICkit / PICkit 4 / PICkit 5).
@@ -85,3 +93,12 @@ tools.ipe.program.pattern.windows="{tools.ipe.cmd.path}xc16pp-flash.bat" {build.
 # default tool {upload.tp} (PKOB4) — no programmer/port selection needed.
 tools.ipe.upload.pattern="{tools.ipe.cmd.path}xc16pp-flash" {build.mcu} {upload.tp} "{build.path}/{build.project_name}.hex" {upload.reset}
 tools.ipe.upload.pattern.windows="{tools.ipe.cmd.path}xc16pp-flash.bat" {build.mcu} {upload.tp} "{build.path}/{build.project_name}.hex" {upload.reset}
+
+# Full chip erase. This core has NO bootloader, so the IDE's
+# "Tools > Burn Bootloader" action is repurposed to erase the device flash
+# (ipecmd -E). It uses the programmer selected in Tools > Programmer
+# ({program.tp}); the wrapper defaults to the on-board PKOB4 if none is set.
+tools.ipe.erase.pattern="{tools.ipe.cmd.path}xc16pp-erase" -mcu={build.mcu} -tp={program.tp}
+tools.ipe.erase.pattern.windows="{tools.ipe.cmd.path}xc16pp-erase.bat" {build.mcu} {program.tp}
+tools.ipe.bootloader.pattern="{tools.ipe.cmd.path}xc16pp-erase" -mcu={build.mcu} -tp={program.tp}
+tools.ipe.bootloader.pattern.windows="{tools.ipe.cmd.path}xc16pp-erase.bat" {build.mcu} {program.tp}

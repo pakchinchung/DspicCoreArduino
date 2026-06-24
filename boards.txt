@@ -9,6 +9,7 @@
 # Select the programmer under Tools > Programmer (programmers.txt), then use
 # "Upload Using Programmer". After-upload reset behavior is a board menu below.
 menu.reset=After Upload
+menu.i2c1pins=I2C1 pins
 
 ##############################################################
 # dsPIC33CK256MP508 (generic)
@@ -27,6 +28,7 @@ dspic33ck256mp508.upload.protocol=ipe
 dspic33ck256mp508.upload.reset=run
 dspic33ck256mp508.upload.tp=PKOB4
 dspic33ck256mp508.program.tool=ipe
+dspic33ck256mp508.bootloader.tool=ipe
 dspic33ck256mp508.upload.maximum_size=262144
 dspic33ck256mp508.upload.maximum_data_size=49152
 
@@ -34,6 +36,12 @@ dspic33ck256mp508.menu.reset.run=Run sketch (release reset)
 dspic33ck256mp508.menu.reset.run.upload.reset=run
 dspic33ck256mp508.menu.reset.hold=Hold in reset
 dspic33ck256mp508.menu.reset.hold.upload.reset=hold
+
+# I2C1 pin routing (FDEVOPT.ALTI2C1, compile-time). Default = alternate RC8/RC9.
+dspic33ck256mp508.menu.i2c1pins.alt=Alternate RC8 (SDA) / RC9 (SCL)
+dspic33ck256mp508.menu.i2c1pins.alt.build.extra_flags=
+dspic33ck256mp508.menu.i2c1pins.primary=Primary RB9 (SDA) / RB8 (SCL)
+dspic33ck256mp508.menu.i2c1pins.primary.build.extra_flags=-DDSPIC_I2C1_PRIMARY
 
 ##############################################################
 # dsPIC33AK128MC106  (dsPIC33A family, 32-bit; experimental)
@@ -53,6 +61,7 @@ dspic33ak128mc106.upload.protocol=ipe
 dspic33ak128mc106.upload.reset=run
 dspic33ak128mc106.upload.tp=PKOB4
 dspic33ak128mc106.program.tool=ipe
+dspic33ak128mc106.bootloader.tool=ipe
 dspic33ak128mc106.upload.maximum_size=131072
 dspic33ak128mc106.upload.maximum_data_size=16384
 

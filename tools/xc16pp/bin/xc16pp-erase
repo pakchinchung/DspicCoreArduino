@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# xc16pp-erase — FULL CHIP ERASE via MPLAB IPE command-line (ipecmd).
+# This core has no bootloader, so the Arduino IDE "Tools > Burn Bootloader"
+# action is repurposed to erase the device's flash.
+# Requires MPLAB X IDE installed (provides ipecmd.jar).
+#
+# Usage (set by platform.txt bootloader hook):
+#   xc16pp-erase -mcu=<device> -tp=<PKOB4|PK4|PK5> [-v4|-v0]
+
+set -e
+
+TP="PK4"
+VERBOSE=""
+MCU=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -mcu=*)   MCU="${1#-mcu=}"  ;;
+        -tp=*)    TP="${1#-tp=}"    ;;
+        -v4)      VERBOSE="-v4"     ;;
+        -v0)      VERBOSE="-v0"     ;;
+    esac
+    shift
+done
+
+# Locate MPLAB X ipecmd.jar
+find_ipecmd() {
+    for base in \
+        "/c/Program Files/Microchip/MPLABX" \
+        "/Applications/microchip/mplabx"    \
+        "/opt/microchip/mplabx"; do
+        [ -d "$base" ] && {
+            ver=$(ls -1 "$base" 2>/dev/null | grep -E '^v[0-9]' | sort -V | tail -1)
+            jar="$base/$ver/mplab_platform/mplab_ipe/ipecmd.jar"
+            [ -f "$jar" ] && { echo "$jar"; return; }
+        }
+    done
+    echo "ERROR: MPLAB X ipecmd.jar not found. Install MPLAB X IDE from microchip.com." >&2
+    exit 1
+}
+
+IPECMD_JAR=$(find_ipecmd)
+
+# -E = Erase Flash Device; -OL = release device from reset afterwards.
+exec java -jar "$IPECMD_JAR" \
+    -P"$MCU" \
+    -TP"$TP" \
+    -E \
+    -OL \
+    $VERBOSE

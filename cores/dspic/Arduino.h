@@ -7,6 +7,7 @@
 #include <math.h>
 
 #include "binary.h"
+#include "avr/pgmspace.h"   // PROGMEM / pgm_read_* compat for stock libraries
 #include "dspic_pins.h"     // native-name pin model (RA0..RG15, PortReg, g_ports)
 #include "pins_arduino.h"   // pulled from variant/ (board pin table + aliases)
 
@@ -21,6 +22,16 @@ extern "C" {
 
 #define LOW             0
 #define HIGH            1
+
+// ---- bit order (SPI, shiftIn/Out) ----
+#define LSBFIRST        0
+#define MSBFIRST        1
+
+// ---- print number bases ----
+#define DEC             10
+#define HEX             16
+#define OCT             8
+#define BIN             2
 
 // ---- math / bits ----
 #define PI              3.1415926535897932384626433832795
@@ -65,6 +76,10 @@ int  digitalRead(uint8_t pin);
 // ---- analog I/O ----
 int  analogRead(uint8_t pin);
 void analogWrite(uint8_t pin, int val);
+void analogReadResolution(uint8_t bits);
+void analogWriteResolution(uint8_t bits);
+void analogReference(uint8_t mode);
+void dacWrite(uint8_t channel, uint16_t value);   // dsPIC DAC (0..4095)
 
 // ---- timing ----
 unsigned long millis(void);

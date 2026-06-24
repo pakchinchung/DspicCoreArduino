@@ -17,6 +17,15 @@
 #pragma config JTAGEN   = OFF
 #pragma config ICS      = PGD2        // ICSP on PGD2/PGC2 (DM330030 debugger)
 
+// I2C1 pin routing (FDEVOPT.ALTI2C1) — compile-time, not runtime: I2C SCL/SDA
+// are not PPS pins. Default = ALTERNATE pins RC8 (SDA) / RC9 (SCL). Build with
+// -DDSPIC_I2C1_PRIMARY (Tools > "I2C1 pins" menu) to use primary RB8/RB9.
+#if defined(DSPIC_I2C1_PRIMARY)
+#pragma config ALTI2C1 = OFF          // I2C1 -> SDA1/SCL1 (RB9/RB8)
+#else
+#pragma config ALTI2C1 = ON           // I2C1 -> ASDA1/ASCL1 (RC8/RC9)
+#endif
+
 // ---- Per-port register table (cores/dspic/dspic_pins.h) -----------
 // dsPIC33CK256MP508 implements ports A..E (no F/G). Index order MUST match
 // the PA..PG enum (A=0..E=4); absent ports get NULL entries.
