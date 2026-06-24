@@ -78,8 +78,9 @@ is needed — GitHub Releases is HTTP, so this matches production.)
 
 ## Known cosmetic issues (do not affect the .hex)
 
-- "Sketch uses 0 bytes" in the size report — `-ffunction-sections` splits the
-  code into many `.text.*` sections that the simple size regex doesn't total.
-  The binary is fine; only the size display is wrong.
 - `warning: No interrupt vector names defined` / `-fno-short-double ignored` —
   expected from the GPL `--without-headers` rebuild; codegen is correct.
+
+(The earlier "Sketch uses 0 bytes" size-report bug is **fixed** — `xc16pp-size.bat`
+now reports device-correct Program/Data bytes by summing objdump sections with a
+quoted `-mdfp=<DFP>`, and `platform.txt` parses the decimal totals.)

@@ -6,8 +6,9 @@
 > checklist) is in **[`BUILD_JOURNEY.md`](BUILD_JOURNEY.md)**.
 
 XC-DSC ships its GCC with the C++ front-end disabled. We rebuild it from
-Microchip's GPL source with `--enable-languages=c,c++` — legal under GPLv3 (see
-[`../PLAN.md`](../PLAN.md)). The two lessons that made it work:
+Microchip's GPL source with `--enable-languages=c,c++` — legal under GPLv3
+(Microchip's EULA defers to the OSS licenses for the GCC binaries). The two
+lessons that made it work:
 
 1. **Build on Linux/WSL**, not native Windows/MSYS2 (avoids shell/path/quoting issues).
 2. **Use a gcc-11/12 host**, not gcc-15/16 (new libstdc++ collides with GCC 8.3 source).

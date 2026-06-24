@@ -164,4 +164,4 @@ MPLAB X simulator to run. The Linux build only needs to produce `cc1plus`/`elf-g
 5. ☐ Run `tools/build/build-on-wsl.sh` (it applies patches 4a, system-gmp, skips binutils).
 6. ☐ Work the §6 table for any new symptom.
 7. ☐ Verify per §7.
-8. ☐ **GPLv3:** publish the modified source you built from (copyleft). See `PLAN.md`.
+8. ☐ **GPLv3:** publish the modified source you built from (copyleft).
