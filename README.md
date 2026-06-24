@@ -5,10 +5,16 @@ dsPIC33** microcontrollers — including **C++** sketches and libraries, which
 Microchip's stock compiler normally disables. Write ordinary Arduino code, pick
 your pins by their datasheet names, and it compiles and runs on a dsPIC33.
 
-> **Status: working (v0.1.4).** Full Arduino HAL implemented and verified on
+> **Status: working (v0.1.5).** Full Arduino HAL implemented and verified on
 > hardware (digital I/O, `Serial`, `Wire`/I²C, `SPI`, `analogRead`, `analogWrite`
 > PWM, and DAC). Standard libraries compile against it — e.g. a 16×2 I²C LCD runs
 > on the stock **LiquidCrystal_I2C** library.
+>
+> **New in v0.1.5:** second target family **dsPIC33AK128MC106** is now
+> hardware-verified for digital I/O, `Serial`/`Serial1`, `analogRead`, `SPI`, and
+> `Wire`/I²C; on-board **programmer selection** when multiple PKoB tools are
+> attached (Tools ▸ Programmer); and per-family **clock/PLL** menu. (AK
+> `analogWrite`/PWM is still being brought up.)
 
 ---
 
