@@ -12,6 +12,28 @@
         {
           "name": "dspicArduino Core",
           "architecture": "dspic",
+          "version": "0.1.6",
+          "category": "Contributed",
+          "url": "https://github.com/pakchinchung/DspicCoreArduino/releases/download/v0.1.6/dspicArduino-dspic-0.1.6.zip",
+          "archiveFileName": "dspicArduino-dspic-0.1.6.zip",
+          "checksum": "SHA-256:88f8f996ae97f0da3b58c01c7ec4982d61554907d441d1103ff1576b91b5db9e",
+          "size": "26094129",
+          "help": {
+            "online": "https://github.com/pakchinchung/DspicCoreArduino/issues"
+          },
+          "boards": [
+            {
+              "name": "dsPIC33CK256MP508 (generic)"
+            },
+            {
+              "name": "dsPIC33AK128MC106 (experimental)"
+            }
+          ],
+          "toolsDependencies": []
+        },
+        {
+          "name": "dspicArduino Core",
+          "architecture": "dspic",
           "version": "0.1.5",
           "category": "Contributed",
           "url": "https://github.com/pakchinchung/DspicCoreArduino/releases/download/v0.1.5/dspicArduino-dspic-0.1.5.zip",

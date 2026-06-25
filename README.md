@@ -5,16 +5,15 @@ dsPIC33** microcontrollers — including **C++** sketches and libraries, which
 Microchip's stock compiler normally disables. Write ordinary Arduino code, pick
 your pins by their datasheet names, and it compiles and runs on a dsPIC33.
 
-> **Status: working (v0.1.5).** Full Arduino HAL implemented and verified on
+> **Status: working (v0.1.6).** Full Arduino HAL implemented and verified on
 > hardware (digital I/O, `Serial`, `Wire`/I²C, `SPI`, `analogRead`, `analogWrite`
-> PWM, and DAC). Standard libraries compile against it — e.g. a 16×2 I²C LCD runs
-> on the stock **LiquidCrystal_I2C** library.
+> PWM, `dacWrite`, `attachInterrupt`, `EEPROM`). Standard libraries compile against
+> it — e.g. a 16×2 I²C LCD runs on the stock **LiquidCrystal_I2C** library.
 >
-> **New in v0.1.5:** second target family **dsPIC33AK128MC106** is now
-> hardware-verified for digital I/O, `Serial`/`Serial1`, `analogRead`, `SPI`, and
-> `Wire`/I²C; on-board **programmer selection** when multiple PKoB tools are
-> attached (Tools ▸ Programmer); and per-family **clock/PLL** menu. (AK
-> `analogWrite`/PWM is still being brought up.)
+> **New in v0.1.6:** the **dsPIC33AK128MC106** target is now hardware-verified for
+> the full peripheral set too — `analogWrite`/PWM (routed via PPS), `dacWrite`,
+> `attachInterrupt`, and a flash-backed `EEPROM` that persists across reset — and it
+> can run at **200 MIPS** (Tools ▸ Clock). See the capability matrix below.
 
 ---
 
@@ -41,8 +40,38 @@ your pins by their datasheet names, and it compiles and runs on a dsPIC33.
 
 | Board | MCU | Notes |
 |-------|-----|-------|
-| dsPIC33CK256MP508 (generic) | dsPIC33CK256MP508 | Primary target (e.g. DM330030 Curiosity) |
-| dsPIC33AK128MC106 (experimental) | dsPIC33AK128MC106 | Compiles/links; C++-on-hardware still being validated |
+| dsPIC33CK256MP508 (generic) | dsPIC33CK256MP508 | Primary target (e.g. DM330030 Curiosity); all features hardware-verified |
+| dsPIC33AK128MC106 (generic / Curiosity) | dsPIC33AK128MC106 | 32-bit family; core peripherals hardware-verified (see matrix below) |
+
+## What works
+
+Legend: ✅ implemented & verified on hardware · 🟡 implemented, not yet hardware-verified · 🚧 in progress · ❌ not yet implemented
+
+| Capability | dsPIC33CK | dsPIC33AK | Notes |
+|------------|:---------:|:---------:|-------|
+| `pinMode` / `digitalWrite` / `digitalRead` | ✅ | ✅ | pins by datasheet name |
+| `millis` / `micros` / `delay` / `delayMicroseconds` | ✅ | ✅ | Timer1 1 ms tick |
+| `Serial` (UART) | ✅ | ✅ | PKoB4 / MCP2221A virtual COM |
+| `Serial1` / `Serial2` (extra UARTs) | ✅ | ✅ (Serial1) | PPS pin select via `setPins()` |
+| `analogRead` (ADC) | ✅ | ✅ | 12-bit |
+| `analogWrite` (PWM) | ✅ | ✅ | AK high-speed PWM, output routed via PPS |
+| `dacWrite` (DAC) | ✅ | ✅ | AK DAC1 on RA1; verified via internal DAC→ADC loopback |
+| `Wire` / I²C (master) | ✅ | ✅ | AK verified against a PCF8574 LCD (0x27) |
+| `SPI` (master) | ✅ | ✅ | verified via loopback |
+| `attachInterrupt` (pin change) | ✅ | ✅ | Change Notification; AK ports A–D |
+| `tone` / `noTone` / `shiftOut` / `shiftIn` / `pulseIn` | ❌ | ❌ | advanced I/O — planned |
+| `map` / `random` / `randomSeed`, math & `String` | ✅ | ✅ | family-agnostic |
+| `EEPROM` library (flash-emulated) | ✅ | ✅ | persists across reset (NVM page erase + quad-word program) |
+| Real C++ (classes / virtuals / global ctors) | ✅ | ✅ | C++-enabled GCC |
+| Clock / PLL selection menu | ✅ | ✅ | Tools ▸ Clock |
+| Programmer (PKoB S/N) selection | ✅ | ✅ | Tools ▸ Programmer (multi-tool benches) |
+| Upload via MPLAB IPE (no bootloader) | ✅ | ✅ | on-board PKoB4 or external PICkit/SNAP/ICD |
+
+> **dsPIC33AK is newer** in this core, but its peripheral set is now nearly
+> complete and hardware-verified (digital I/O, `Serial`/`Serial1`, `analogRead`,
+> `analogWrite`/PWM, `SPI`, `Wire`/I²C, `dacWrite`, `attachInterrupt`, `EEPROM`).
+> The AK can also run at **200 MIPS** (Tools ▸ Clock). Both targets are good
+> starting points.
 
 ---
 
