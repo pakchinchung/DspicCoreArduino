@@ -66,7 +66,11 @@ void delay(unsigned long ms)
 
 void delayMicroseconds(unsigned int us)
 {
-    while (us--) { __asm__ volatile ("nop"); }
+    // Derive from the (HW-verified) Timer1-based micros() so the delay scales with
+    // the actual clock — a fixed nop count would be wrong across F_CPU options and
+    // was ~100x too short here (broke us-timed peripherals, e.g. HD44780 LCD init).
+    unsigned long start = micros();
+    while ((micros() - start) < (unsigned long)us) { }
 }
 
 void interrupts(void)   { __builtin_enable_interrupts();  }
@@ -150,13 +154,11 @@ void delay(unsigned long ms)
 
 void delayMicroseconds(unsigned int us)
 {
-    // For short delays use the built-in cycle counter.
-    // __delay_us() is provided by <libpic30.h> and compiled inline.
-    // FCY must be defined — we define it in pins_arduino.h as F_CPU/2.
-    while (us--) {
-        // 1 µs at 100 MHz = 50 instruction cycles (FCY=50MHz).
-        __asm__ volatile("repeat #49\n\tnop");
-    }
+    // Derive from the Timer1-based micros() so the delay scales with the actual
+    // clock. (A fixed 'repeat #49' nop count is only right at FCY=50 MHz and runs
+    // 2x short at the 100 MIPS clock option.)
+    unsigned long start = micros();
+    while ((micros() - start) < (unsigned long)us) { }
 }
 
 void interrupts(void)   { __builtin_enable_interrupts();  }

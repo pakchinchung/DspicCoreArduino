@@ -1,0 +1,24 @@
+# boards.local.txt.example  — USER-LOCAL programmer overrides
+#
+# Tool (PKOB/PICkit) serial numbers are specific to YOUR hardware, so they are not
+# shipped in the package. If you have only one programmer connected, you don't need
+# this file — the default "Programmer: Auto (single tool)" just works.
+#
+# If you have TWO OR MORE tools connected and need to pick a specific one, copy this
+# file to "boards.local.txt" in the installed platform folder (next to boards.txt):
+#   <sketchbook or Arduino15>/packages/dspicArduino/hardware/dspic/<version>/
+# Arduino merges boards.local.txt with boards.txt and does NOT overwrite it on update.
+#
+# Find a tool's serial number in MPLAB IPE, or in MPLAB X's tool properties.
+# Then add a menu entry per board (replace the names/serials with your own):
+#
+#   dspic33ck256mp508.menu.prog.mytool=My CK PKoB (SN 12345)
+#   dspic33ck256mp508.menu.prog.mytool.upload.tool_sn=BUR233012076
+#
+#   dspic33ak128mc106.menu.prog.mytool=My AK PKoB (SN 67890)
+#   dspic33ak128mc106.menu.prog.mytool.upload.tool_sn=020085204RYN000728
+#
+# The new option appears under Tools > "Programmer (PKOB S/N)".
+#
+# Alternatively (e.g. for arduino-cli / scripts), set the IPE_TOOL_SN environment
+# variable to the tool serial before uploading — the upload wrapper honours it.

@@ -130,14 +130,19 @@ interface — so you can flash *and* monitor on the same cable.
      newest cached `.ino.hex` with `tools/production/dspic-tool.bat`.
 
 > **Two boards connected at once (CK + AK):** both PKOB4 programmers enumerate, so
-> `ipecmd` errors "More than one PKOB4 connected" unless you select one by S/N. Use
-> **Tools ▸ "Programmer (PKOB S/N)"** (menu `prog` → `upload.tool_sn` → `ipecmd -TS`),
-> or set the `IPE_TOOL_SN` env var (wrapper honors both; menu/arg wins). This setup's
-> S/Ns (list yours via `ipecmd -P<dev> -TPPKOB4 -OK -v4`): **CK Curiosity =
-> `BUR233012076`, AK GP DIM = `020085204RYN000728`**. CLI: append to the FQBN
-> comma-separated, e.g. `...:dspic33ak128mc106:clock=f100,prog=ak`. COM ports with
-> both plugged: **CK serial = COM6**, **AK serial = COM24** (MCP2221A UART consoles;
-> COM23/COM25 are the PKOB back-channels, COM9 is an unrelated CP210x).
+> `ipecmd` errors "More than one PKOB4 connected" unless you select one by S/N.
+> ⚠ **Tool serials are PER-MACHINE and must NOT be hardcoded in the shipped
+> `boards.txt`** (the published menu has only "Auto (single tool)"). Two ways to
+> target a specific tool WITHOUT polluting the package:
+> - **`IPE_TOOL_SN` env var** (wrapper honors it) — used for autonomous CLI flashing
+>   here: `IPE_TOOL_SN=<sn> arduino-cli compile -u -p <port> -b <fqbn> <sketch>`.
+> - **user `boards.local.txt`** in the install dir (untracked, survives updates;
+>   template = repo `boards.local.txt.example`) to add `menu.prog.*` options. This
+>   rig keeps a local one so `prog=ck`/`prog=ak` still work for dev.
+> This setup's S/Ns (list yours via `ipecmd -P<dev> -TPPKOB4 -OK -v4`): **CK =
+> `BUR233012076`, AK = `020085204RYN000728`**. **COM ports (current): CK serial =
+> COM26, AK serial = COM24; PKOB back-channels CK=COM23 / AK=COM25; COM9 = unrelated
+> CP210x.** (Earlier sessions had CK serial on COM6 before a replug.)
 
 > Still NO autonomous *programmer-driven debug* (no mdb/ICD stepping here) and no
 > scope/logic-analyzer — peripheral *accuracy* (PWM duty, SPI/UART loopback timing)

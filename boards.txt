@@ -59,14 +59,13 @@ dspic33ck256mp508.menu.clock.f100.build.f_cpu=200000000UL
 dspic33ck256mp508.menu.clock.frc=8 MHz FRC (no PLL)
 dspic33ck256mp508.menu.clock.frc.build.f_cpu=8000000UL
 
-# Programmer (PKOB S/N) — only matters when 2+ tools are connected. Auto = default.
+# Programmer (PKOB S/N) — only matters when 2+ tools are connected. Auto = default
+# (single tool, no serial). To target a SPECIFIC tool when several are attached, add
+# your own tool's serial in a user boards.local.txt (see docs) or set the IPE_TOOL_SN
+# environment variable — tool serials are per-machine and are NOT shipped here.
 dspic33ck256mp508.upload.tool_sn=
 dspic33ck256mp508.menu.prog.auto=Auto (single tool)
 dspic33ck256mp508.menu.prog.auto.upload.tool_sn=
-dspic33ck256mp508.menu.prog.ck=PKOB BUR233012076 (CK Curiosity)
-dspic33ck256mp508.menu.prog.ck.upload.tool_sn=BUR233012076
-dspic33ck256mp508.menu.prog.ak=PKOB 020085204RYN000728 (AK GP DIM)
-dspic33ck256mp508.menu.prog.ak.upload.tool_sn=020085204RYN000728
 
 ##############################################################
 # dsPIC33AK128MC106  (dsPIC33A family, 32-bit; experimental)
@@ -116,11 +115,10 @@ dspic33ak128mc106.menu.clock.f100.build.f_cpu=200000000UL
 dspic33ak128mc106.menu.clock.f200=200 MIPS - FRC+PLL (FCY 200 MHz)
 dspic33ak128mc106.menu.clock.f200.build.f_cpu=400000000UL
 
-# Programmer (PKOB S/N) — only matters when 2+ tools are connected. Auto = default.
+# Programmer (PKOB S/N) — only matters when 2+ tools are connected. Auto = default
+# (single tool, no serial). To target a SPECIFIC tool when several are attached, add
+# your own tool's serial in a user boards.local.txt (see docs) or set the IPE_TOOL_SN
+# environment variable — tool serials are per-machine and are NOT shipped here.
 dspic33ak128mc106.upload.tool_sn=
 dspic33ak128mc106.menu.prog.auto=Auto (single tool)
 dspic33ak128mc106.menu.prog.auto.upload.tool_sn=
-dspic33ak128mc106.menu.prog.ak=PKOB 020085204RYN000728 (AK GP DIM)
-dspic33ak128mc106.menu.prog.ak.upload.tool_sn=020085204RYN000728
-dspic33ak128mc106.menu.prog.ck=PKOB BUR233012076 (CK Curiosity)
-dspic33ak128mc106.menu.prog.ck.upload.tool_sn=BUR233012076

@@ -5,15 +5,18 @@ dsPIC33** microcontrollers — including **C++** sketches and libraries, which
 Microchip's stock compiler normally disables. Write ordinary Arduino code, pick
 your pins by their datasheet names, and it compiles and runs on a dsPIC33.
 
-> **Status: working (v0.1.6).** Full Arduino HAL implemented and verified on
-> hardware (digital I/O, `Serial`, `Wire`/I²C, `SPI`, `analogRead`, `analogWrite`
-> PWM, `dacWrite`, `attachInterrupt`, `EEPROM`). Standard libraries compile against
-> it — e.g. a 16×2 I²C LCD runs on the stock **LiquidCrystal_I2C** library.
+> **Status: working (v0.1.8).** The full standard Arduino API is implemented and
+> hardware-verified on **both** dsPIC33CK and dsPIC33AK: digital I/O, `Serial`,
+> `Wire`/I²C, `SPI`, `analogRead`, `analogWrite` PWM, `dacWrite`, `attachInterrupt`,
+> `EEPROM`, and the Advanced I/O group (`tone`/`noTone`, `shiftOut`/`shiftIn`,
+> `pulseIn`/`pulseInLong`). Standard libraries compile against it — e.g. a 16×2 I²C
+> LCD runs on the stock **LiquidCrystal_I2C** library.
 >
-> **New in v0.1.6:** the **dsPIC33AK128MC106** target is now hardware-verified for
-> the full peripheral set too — `analogWrite`/PWM (routed via PPS), `dacWrite`,
-> `attachInterrupt`, and a flash-backed `EEPROM` that persists across reset — and it
-> can run at **200 MIPS** (Tools ▸ Clock). See the capability matrix below.
+> **New in v0.1.8:** Advanced I/O group on both families; fixed `delayMicroseconds`
+> (was clock-miscalibrated → broke µs-timed peripherals); the **Programmer** menu no
+> longer hardcodes specific tool serials (add yours via `boards.local.txt`).
+> Earlier: dsPIC33AK reached full HAL parity in v0.1.6 (PWM/PPS, `dacWrite`,
+> `attachInterrupt`, `EEPROM`, 200 MIPS).
 
 ---
 
@@ -66,7 +69,7 @@ Legend: ✅ implemented & verified on hardware · 🟡 implemented, not yet hard
 | `EEPROM` library (flash-emulated) | ✅ | ✅ | persists across reset (NVM page erase + quad-word program) |
 | Real C++ (classes / virtuals / global ctors) | ✅ | ✅ | C++-enabled GCC |
 | Clock / PLL selection menu | ✅ | ✅ | Tools ▸ Clock |
-| Programmer (PKoB S/N) selection | ✅ | ✅ | Tools ▸ Programmer (multi-tool benches) |
+| Programmer selection (multi-tool) | ✅ | ✅ | Auto by default; add your tool S/N via boards.local.txt |
 | Upload via MPLAB IPE (no bootloader) | ✅ | ✅ | on-board PKoB4 or external PICkit/SNAP/ICD |
 
 > **dsPIC33AK is newer** in this core, but its peripheral set is now nearly

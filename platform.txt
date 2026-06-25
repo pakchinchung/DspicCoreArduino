@@ -10,7 +10,7 @@
 ##############################################################
 
 name=dspicArduino Core
-version=0.1.7
+version=0.1.8
 
 compiler.path={runtime.platform.path}/tools/xc16pp/bin/
 
