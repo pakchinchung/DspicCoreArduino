@@ -54,3 +54,10 @@ tools/xc16pp/dspic-cpp-toolchain-win/
 
 # Microchip copyrighted PDFs (reference only; do not redistribute)
 *.pdf
+
+# Demo videos / large media (keep local, do not commit)
+*.mp4
+*.mov
+
+# Local vendor reference (MCC project for AK peripherals) - not part of the core
+MplabProject/

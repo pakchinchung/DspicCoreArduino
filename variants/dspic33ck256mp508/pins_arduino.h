@@ -12,8 +12,12 @@
 //
 // This device implements ports A..E (declared in variant.cpp's g_ports[]).
 
-// CPU frequency (FOSC/2 after PLL; configured in variant.cpp initClock()).
-#define F_CPU            100000000UL   // FCY = 100 MHz
+// CPU frequency = FOSC (FCY = F_CPU/2). The Tools > "Clock (CPU speed)" menu sets
+// this via -DF_CPU={build.f_cpu}; the #ifndef lets that override and only falls
+// back to 100 MHz (FOSC; FCY 50 MHz — the default/verified config) if unset.
+#ifndef F_CPU
+#define F_CPU            100000000UL
+#endif
 
 // LED_BUILTIN is required by stock sketches (e.g. the IDE's built-in Blink).
 // There is no universal "user LED" on a bare chip, so this is only a sensible

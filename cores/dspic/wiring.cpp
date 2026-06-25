@@ -10,23 +10,63 @@
 #include <xc.h>
 
 #if defined(__dsPIC33A__)
-// ---- dsPIC33A (AK) approximate timing — TODO: real Timer1 + clock ---------
+// ---- dsPIC33A (AK) Timer1 1 ms tick ---------------------------------------
+// AK register differences vs 33CK (verified from p33AK128MC106.h):
+//   * enable bit is T1CONbits.ON (bit 15), NOT TON;
+//   * T1 interrupt bits live in IFS1/IEC1/IPC6 (NOT IFS0/IEC0/IPC0);
+//   * SFRs are 32-bit, so a 32-bit load of _millis_count is atomic (no DISI).
+//   * vector name is still _T1Interrupt (DFP template confirms).
+// AK uses a relocatable IVT (IVTBASE); whether _T1Interrupt vectors without extra
+// setup is verified ON HARDWARE by the AkBlink test (delay() is millis-based, so
+// if the ISR never fires the LEDs freeze instead of blink).
+//
+// CALIBRATION: PR1 assumes FCY = F_CPU/2. The AK clock/PLL isn't configured yet
+// (DIM has an 8 MHz EC clock on CLKI/RC1), so the part runs on its power-on clock
+// and the rate is approximate — but Timer1 still ticks, so timing progresses.
 static volatile unsigned long _millis_count = 0;
 
-void initTimer1(void) { /* TODO(AK): IFS1/IEC1-based Timer1 ISR + clock tree */ }
-
-unsigned long millis(void) { return _millis_count; }
-unsigned long micros(void) { return _millis_count * 1000UL; }
-
-void delayMicroseconds(unsigned int us)
+extern "C" void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void)
 {
-    // Coarse busy-wait; precision pending the AK clock setup.
-    while (us--) { __asm__ volatile ("nop"); }
+    _millis_count++;
+    IFS1bits.T1IF = 0;
+}
+
+void initTimer1(void)
+{
+    T1CON = 0;
+    TMR1  = 0;
+    T1CONbits.TCKPS = 1;                                     // 1:8 prescaler
+    // AK Timer1 is clocked by the STANDARD-speed peripheral clock = FPB/2 = FCY/2
+    // (= F_CPU/4), NOT FCY. (Verified by a millis-vs-host-timestamp self-test that
+    // ran 2x slow with the FCY assumption.) So divide by an extra 2 vs the CK path.
+    PR1 = (uint32_t)((F_CPU / 4UL / 8UL / 1000UL) - 1UL);    // ~1 ms @ Timer1=FCY/2
+
+    IPC6bits.T1IP = 4;
+    IFS1bits.T1IF = 0;
+    IEC1bits.T1IE = 1;
+    T1CONbits.ON  = 1;
+}
+
+unsigned long millis(void) { return _millis_count; }        // 32-bit load is atomic
+
+unsigned long micros(void)
+{
+    unsigned long m   = _millis_count;
+    unsigned long tmr = TMR1;
+    // Timer1 @ FCY/2 with 1:8 prescaler ⇒ tick = 32e6/F_CPU µs; factor out 1e6 so
+    // tmr*32 can't overflow 32-bit.
+    return m * 1000UL + (tmr * 32UL) / (F_CPU / 1000000UL);
 }
 
 void delay(unsigned long ms)
 {
-    while (ms--) { delayMicroseconds(1000); _millis_count++; }
+    unsigned long start = millis();
+    while ((millis() - start) < ms) {}
+}
+
+void delayMicroseconds(unsigned int us)
+{
+    while (us--) { __asm__ volatile ("nop"); }
 }
 
 void interrupts(void)   { __builtin_enable_interrupts();  }

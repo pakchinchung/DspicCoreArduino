@@ -9,6 +9,14 @@ extern "C" void __cxa_pure_virtual(void) { for (;;) {} }
 // Defined in variants/<board>/variant.cpp as extern "C".
 extern "C" void initVariant(void);
 
+// yield() — cooperative no-op for single-threaded builds; libraries (or an RTOS)
+// may override it with a strong definition. It lives here, not in hooks.c,
+// because the sketch supplies strong setup()/loop(), so hooks.o is never pulled
+// from the core archive — and this linker won't extract an archive member just
+// to satisfy a reference that only has a weak definition. main.o is always
+// linked, so the weak default is guaranteed present.
+extern "C" __attribute__((weak)) void yield(void) {}
+
 // Called by the XC-DSC C runtime after .data/.bss init and
 // static C++ constructors have run. This is our Arduino entry point.
 int main(void)

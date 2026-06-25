@@ -17,6 +17,15 @@ if "%TP%"=="" set "TP=PKOB4"
 set "RUNFLAG=-OL"
 if /i "%RUN%"=="hold" set "RUNFLAG="
 
+rem Tool serial-number select: when more than one PKOB/PICkit is connected, pick the
+rem target tool's S/N so ipecmd programs the right board (else it errors "More than
+rem one ... connected"). Source: 5th positional arg (from the Tools menu via
+rem platform.txt {upload.tool_sn}); falls back to the IPE_TOOL_SN env var.
+set "TOOLSN=%~5"
+set "TSFLAG="
+if defined IPE_TOOL_SN set "TSFLAG=-TS%IPE_TOOL_SN%"
+if not "%TOOLSN%"=="" set "TSFLAG=-TS%TOOLSN%"
+
 set "IPECMD="
 for /f "delims=" %%P in ('dir /b /ad /o-n "C:\Program Files\Microchip\MPLABX\*" 2^>nul') do if not defined IPECMD if exist "C:\Program Files\Microchip\MPLABX\%%P\mplab_platform\mplab_ipe\ipecmd.exe" set "IPECMD=C:\Program Files\Microchip\MPLABX\%%P\mplab_platform\mplab_ipe\ipecmd.exe"
 if not defined IPECMD echo ERROR: MPLAB X ipecmd.exe not found (install MPLAB X IDE).>&2& exit /b 2
@@ -26,7 +35,7 @@ rem run it from its own dir (pushd) but invoke by FULL path (this cmd context do
 rem not search CWD for executables). -M = program; -OL = release from reset (run).
 for %%I in ("%IPECMD%") do set "IPEDIR=%%~dpI"
 pushd "%IPEDIR%"
-"%IPECMD%" -P%MCU% -TP%TP% -F"%HEX%" -M %RUNFLAG%
+"%IPECMD%" -P%MCU% -TP%TP% %TSFLAG% -F"%HEX%" -M %RUNFLAG%
 set "RC=%ERRORLEVEL%"
 popd
 exit /b %RC%

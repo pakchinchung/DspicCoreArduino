@@ -10,7 +10,7 @@
 ##############################################################
 
 name=dspicArduino Core
-version=0.1.4
+version=0.1.6
 
 compiler.path={runtime.platform.path}/tools/xc16pp/bin/
 
@@ -85,14 +85,14 @@ tools.ipe.upload.params.quiet=-v0
 # (Tools > Programmer + "Upload Using Programmer"). {program.tp} comes from the
 # selected programmer (programmers.txt). Positional args (cmd splits on '='):
 #   xc16pp-flash <MCU> <TP> "<hex>" <run|hold>
-tools.ipe.program.pattern="{tools.ipe.cmd.path}xc16pp-flash" {build.mcu} {program.tp} "{build.path}/{build.project_name}.hex" {upload.reset}
-tools.ipe.program.pattern.windows="{tools.ipe.cmd.path}xc16pp-flash.bat" {build.mcu} {program.tp} "{build.path}/{build.project_name}.hex" {upload.reset}
+tools.ipe.program.pattern="{tools.ipe.cmd.path}xc16pp-flash" {build.mcu} {program.tp} "{build.path}/{build.project_name}.hex" {upload.reset} {upload.tool_sn}
+tools.ipe.program.pattern.windows="{tools.ipe.cmd.path}xc16pp-flash.bat" {build.mcu} {program.tp} "{build.path}/{build.project_name}.hex" {upload.reset} {upload.tool_sn}
 
 # Plain "upload" (the Upload button) works because the board sets
 # upload.protocol=ipe, which lets arduino-cli run this recipe directly with the
 # default tool {upload.tp} (PKOB4) — no programmer/port selection needed.
-tools.ipe.upload.pattern="{tools.ipe.cmd.path}xc16pp-flash" {build.mcu} {upload.tp} "{build.path}/{build.project_name}.hex" {upload.reset}
-tools.ipe.upload.pattern.windows="{tools.ipe.cmd.path}xc16pp-flash.bat" {build.mcu} {upload.tp} "{build.path}/{build.project_name}.hex" {upload.reset}
+tools.ipe.upload.pattern="{tools.ipe.cmd.path}xc16pp-flash" {build.mcu} {upload.tp} "{build.path}/{build.project_name}.hex" {upload.reset} {upload.tool_sn}
+tools.ipe.upload.pattern.windows="{tools.ipe.cmd.path}xc16pp-flash.bat" {build.mcu} {upload.tp} "{build.path}/{build.project_name}.hex" {upload.reset} {upload.tool_sn}
 
 # Full chip erase. This core has NO bootloader, so the IDE's
 # "Tools > Burn Bootloader" action is repurposed to erase the device flash

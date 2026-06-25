@@ -1,0 +1,9 @@
+device DSPIC33CK256MP508
+set system.disableerrormsg true
+hwtool Sim
+program spike\phase1\ctor_test.elf
+break ctor_test.c:30
+run
+print /x main_saw_ctor
+print /x ctor_ran
+quit

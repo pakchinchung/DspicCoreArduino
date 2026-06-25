@@ -1,32 +1,31 @@
 #ifndef Pins_Arduino_h
 #define Pins_Arduino_h
 //
-// Variant: dsPIC33AK128MC106 (dsPIC33A family, 32-bit GPIO SFRs).
+// Variant: dsPIC33AK128MC106 — GENERIC chip support (no board assumptions).
 //
-// Pin model is by NATIVE NAME (RA0..RD15, from cores/dspic/dspic_pins.h via
-// Arduino.h). This device has no on-board Arduino-standard header, so the
-// integer aliases below are example mappings — adjust for your board.
+// Pins are referenced by their datasheet NAME (RA0..RD15, from
+// cores/dspic/dspic_pins.h via Arduino.h). This device implements ports A..D.
+//   #define LED  RC3
+//   pinMode(LED, OUTPUT);
 //
-// NOTE: dsPIC33A is a newer architecture. C++ compiles and links here, but the
-// C++ runtime on the MPLAB X simulator is still under investigation
-// (see docs/DSPIC33A_STATUS.md). Treat this variant as functional-but-unverified
-// on real silicon until clock + runtime are validated.
+// For the Curiosity Platform board + dsPIC33AK128MC106 GP DIM, which has named
+// LEDs/buttons/potentiometer, select  Tools > Pin mapping > "Curiosity GP DIM"
+// (that's the dspic33ak128mc106_curiosity variant) instead.
+//
+// NOTE: dsPIC33A is experimental — digital I/O + delay work on real silicon;
+// the HAL drivers (Serial/SPI/Wire/ADC/PWM) are not yet ported to AK. The AK
+// clock/PLL is not configured (runs on the power-on clock), so millis()/delay()
+// timing is approximate. See docs/PROJECT_STATUS.md.
 
-// FRC default; PLL not yet configured in variant.cpp (see TODO there). This
-// value only feeds the millis()/delay() timer math and must be corrected once
-// the AK clock tree is set up.
-#define F_CPU            100000000UL
+// #ifndef so a future Tools "Clock" menu can override via -DF_CPU={build.f_cpu}.
+#ifndef F_CPU
+#define F_CPU            20000000UL    // ~AK power-on clock (FOSC); see boards.txt
+#endif
 
-// Example I/O aliases (no fixed board) — change to match your hardware.
+// Bare chip has no designated LED; this is only a sensible default so stock
+// sketches that reference LED_BUILTIN still compile. Override for your board.
+#ifndef LED_BUILTIN
 #define LED_BUILTIN      RA0
-#define D0               RA0
-#define D1               RA1
-#define D2               RB0
-#define D3               RB1
-#define D4               RC0
-#define D5               RD0
-
-#define NUM_DIGITAL_PINS   6
-#define NUM_ANALOG_INPUTS  0
+#endif
 
 #endif /* Pins_Arduino_h */

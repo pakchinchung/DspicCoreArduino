@@ -10,6 +10,13 @@
 # "Upload Using Programmer". After-upload reset behavior is a board menu below.
 menu.reset=After Upload
 menu.i2c1pins=I2C1 pins
+menu.pins=Pin mapping
+menu.clock=Clock (CPU speed)
+menu.prog=Programmer (PKOB S/N)
+# NOTE: the PKOB serial numbers in the "Programmer" menu below are THIS dev setup's
+# tools (run `ipecmd -P<dev> -TPPKOB4 -OK -v4` to list yours). Edit them to match
+# your hardware; for a public release, keep just "Auto" (or genericize). When only
+# one programmer is connected, "Auto" is correct; only pick a S/N when 2+ are present.
 
 ##############################################################
 # dsPIC33CK256MP508 (generic)
@@ -43,6 +50,24 @@ dspic33ck256mp508.menu.i2c1pins.alt.build.extra_flags=
 dspic33ck256mp508.menu.i2c1pins.primary=Primary RB9 (SDA) / RB8 (SCL)
 dspic33ck256mp508.menu.i2c1pins.primary.build.extra_flags=-DDSPIC_I2C1_PRIMARY
 
+# Clock (CPU speed) — FRC(8 MHz) + PLL. Sets F_CPU(=FOSC); initClock() picks the
+# matching PLL dividers (FCY = F_CPU/2). First option is the default.
+dspic33ck256mp508.menu.clock.f50=50 MIPS - FOSC 100 MHz / FCY 50 MHz (default)
+dspic33ck256mp508.menu.clock.f50.build.f_cpu=100000000UL
+dspic33ck256mp508.menu.clock.f100=100 MIPS - FOSC 200 MHz / FCY 100 MHz (max)
+dspic33ck256mp508.menu.clock.f100.build.f_cpu=200000000UL
+dspic33ck256mp508.menu.clock.frc=8 MHz FRC (no PLL)
+dspic33ck256mp508.menu.clock.frc.build.f_cpu=8000000UL
+
+# Programmer (PKOB S/N) — only matters when 2+ tools are connected. Auto = default.
+dspic33ck256mp508.upload.tool_sn=
+dspic33ck256mp508.menu.prog.auto=Auto (single tool)
+dspic33ck256mp508.menu.prog.auto.upload.tool_sn=
+dspic33ck256mp508.menu.prog.ck=PKOB BUR233012076 (CK Curiosity)
+dspic33ck256mp508.menu.prog.ck.upload.tool_sn=BUR233012076
+dspic33ck256mp508.menu.prog.ak=PKOB 020085204RYN000728 (AK GP DIM)
+dspic33ck256mp508.menu.prog.ak.upload.tool_sn=020085204RYN000728
+
 ##############################################################
 # dsPIC33AK128MC106  (dsPIC33A family, 32-bit; experimental)
 #   C++ runtime on AK is not yet hardware-verified (docs/DSPIC33A_STATUS.md).
@@ -50,7 +75,11 @@ dspic33ck256mp508.menu.i2c1pins.primary.build.extra_flags=-DDSPIC_I2C1_PRIMARY
 dspic33ak128mc106.name=dsPIC33AK128MC106 (experimental)
 
 dspic33ak128mc106.build.mcu=33AK128MC106
-dspic33ak128mc106.build.f_cpu=100000000UL
+# F_CPU = FOSC. Empirically calibrated to the AK power-on clock (~10 MHz FOSC /
+# ~5 MHz FCY): with no initClock() PLL setup yet, a Blink delay(500) measured ~5 s
+# at the old 100 MHz assumption (~10x slow). Revisit once initClock() configures
+# the 8 MHz EC clock on CLKI/RC1 + PLL to a known FOSC.
+dspic33ak128mc106.build.f_cpu=10000000UL
 dspic33ak128mc106.build.board=DSPIC33AK128MC106
 dspic33ak128mc106.build.core=dspic
 dspic33ak128mc106.build.variant=dspic33ak128mc106
@@ -69,3 +98,29 @@ dspic33ak128mc106.menu.reset.run=Run sketch (release reset)
 dspic33ak128mc106.menu.reset.run.upload.reset=run
 dspic33ak128mc106.menu.reset.hold=Hold in reset
 dspic33ak128mc106.menu.reset.hold.upload.reset=hold
+
+# Pin mapping: generic bare-chip (pins by native name) vs the Curiosity GP DIM
+# board (named LED0..7 / SW1..3 / POT). First option is the default. Each option
+# selects a different variant dir (build.variant), which swaps pins_arduino.h.
+dspic33ak128mc106.menu.pins.curiosity=Curiosity GP DIM board (LED0-7, SW1-3, POT)
+dspic33ak128mc106.menu.pins.curiosity.build.variant=dspic33ak128mc106_curiosity
+dspic33ak128mc106.menu.pins.generic=Generic chip (pins by native name)
+dspic33ak128mc106.menu.pins.generic.build.variant=dspic33ak128mc106
+
+# Clock (CPU speed). dsPIC33A: FCY = FOSC (1:1); our F_CPU = 2*FCY. initClock()
+# picks the PLL config by F_CPU. First option is the default.
+dspic33ak128mc106.menu.clock.por=Power-on clock (~10 MHz FCY, no PLL) (default)
+dspic33ak128mc106.menu.clock.por.build.f_cpu=20000000UL
+dspic33ak128mc106.menu.clock.f100=100 MIPS - FRC+PLL (FCY 100 MHz)
+dspic33ak128mc106.menu.clock.f100.build.f_cpu=200000000UL
+dspic33ak128mc106.menu.clock.f200=200 MIPS - FRC+PLL (FCY 200 MHz)
+dspic33ak128mc106.menu.clock.f200.build.f_cpu=400000000UL
+
+# Programmer (PKOB S/N) — only matters when 2+ tools are connected. Auto = default.
+dspic33ak128mc106.upload.tool_sn=
+dspic33ak128mc106.menu.prog.auto=Auto (single tool)
+dspic33ak128mc106.menu.prog.auto.upload.tool_sn=
+dspic33ak128mc106.menu.prog.ak=PKOB 020085204RYN000728 (AK GP DIM)
+dspic33ak128mc106.menu.prog.ak.upload.tool_sn=020085204RYN000728
+dspic33ak128mc106.menu.prog.ck=PKOB BUR233012076 (CK Curiosity)
+dspic33ak128mc106.menu.prog.ck.upload.tool_sn=BUR233012076

@@ -3,9 +3,9 @@
 //
 // Arduino SPI library for dsPIC33CK (SPI1, master mode).
 //
-// dsPIC pins are remappable (PPS). Defaults map to RD-port remappable pins;
-// call SPI.setPins() BEFORE SPI.begin() to choose your own (dsPIC extension).
-//   SCK  -> RP70 (RD6)   MOSI/SDO -> RP69 (RD5)   MISO/SDI -> RP71 (RD7)
+// dsPIC pins are remappable (PPS). Pins are chosen by native NAME — call
+// SPI.setPins(sck, sdo, sdi) BEFORE SPI.begin() to choose your own (dsPIC ext).
+//   default: SCK -> RD6   MOSI/SDO -> RD5   MISO/SDI -> RD7
 //
 // Standard Arduino API: begin/end, beginTransaction/endTransaction, transfer,
 // transfer16, setBitOrder/setDataMode/setClockDivider.
@@ -48,8 +48,8 @@ public:
     void begin();
     void end();
 
-    // dsPIC extension: choose the remappable pins (RPn numbers) before begin().
-    void setPins(uint8_t sckRP, uint8_t sdoRP, uint8_t sdiRP);
+    // dsPIC extension: choose the remappable pins by native NAME before begin().
+    void setPins(uint8_t sckPin, uint8_t sdoPin, uint8_t sdiPin);
 
     void beginTransaction(SPISettings settings);
     void endTransaction();
@@ -66,8 +66,8 @@ private:
     // module registers + id
     volatile uint16_t *_con1l, *_con1h, *_con2l, *_statl, *_bufl, *_brgl;
     uint8_t  _module;
-    // RPn pin defaults (valid for SPI1/RD-port; set SPI1/SPI2 pins with setPins()).
-    uint8_t  _sck = 70, _sdo = 69, _sdi = 71;
+    // Pin defaults by native name (SCK=RD6, SDO=RD5, SDI=RD7); setPins() overrides.
+    uint8_t  _sck = RD6, _sdo = RD5, _sdi = RD7;
     uint8_t  _order = MSBFIRST;
     uint8_t  _mode  = SPI_MODE0;
     uint32_t _clock = 1000000UL;

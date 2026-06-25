@@ -71,7 +71,58 @@ int analogRead(uint8_t channel)
 
 void analogReference(uint8_t) { /* only AVDD supported for now */ }
 
-#else  // ---- non-dsPIC33C stub ----
+#elif defined(__dsPIC33A__)
+// ---- dsPIC33AK ADC (ADC1, per-channel; software-triggered single-shot) -------
+// analogRead(ch) takes an analog input number ANch (e.g. the Curiosity pot is on
+// AD1AN6 -> analogRead(6)). The AK ADC needs its own clock generator (CLKGEN6);
+// we source it from the 8 MHz FRC so it works on any system-clock setting (slow
+// but fine for analog reads). Sequence per datasheet DS70005539 Example 15-1.
+#include <xc.h>
+
+static bool    s_adc_ready = false;
+static uint8_t s_adc_bits  = 10;          // Arduino default resolution
+
+void analogReadResolution(uint8_t bits) { s_adc_bits = bits; }
+
+static void adcInit()
+{
+    _ADC1MD = 0;                          // enable ADC1 module clock (PMD)
+    __asm__ volatile ("nop"); __asm__ volatile ("nop");
+
+    // ADC high-speed clock = CLKGEN6, sourced from FRC (8 MHz).
+    CLK6CONbits.ON   = 1;
+    CLK6CONbits.NOSC = 1;                 // FRC
+    CLK6CONbits.OSWEN = 1;
+    for (uint32_t i = 0; i < 300000UL && CLK6CONbits.OSWEN;  i++) { }
+    for (uint32_t i = 0; i < 300000UL && !CLK6CONbits.CLKRDY; i++) { }
+
+    AD1CONbits.ON = 1;                    // enable ADC; it auto-calibrates
+    for (uint32_t i = 0; i < 300000UL && !AD1CONbits.ADRDY; i++) { }
+    s_adc_ready = true;
+}
+
+int analogRead(uint8_t channel)
+{
+    if (!s_adc_ready) adcInit();
+
+    AD1CH0CONbits.MODE    = 0;            // single-shot
+    AD1CH0CONbits.TRG1SRC = 1;            // software trigger (AD1SWTRG)
+    AD1CH0CONbits.PINSEL  = channel & 0x0F;   // analog input ANx (single-ended)
+    AD1CH0CONbits.SAMC    = 7;            // long sample time (pot is high-impedance)
+
+    AD1SWTRGbits.CH0TRG = 1;              // start the conversion
+    uint32_t guard = 0;
+    while (!AD1STATbits.CH0RDY && ++guard < 300000UL) { }
+
+    uint16_t raw = (uint16_t)(AD1CH0DATA & 0x0FFF);   // 12-bit, right-aligned
+
+    if (s_adc_bits >= 12) return raw;
+    return raw >> (12 - s_adc_bits);      // scale to requested resolution (def 10-bit)
+}
+
+void analogReference(uint8_t) { /* only AVDD supported for now */ }
+
+#else  // ---- other families stub ----
 void analogReadResolution(uint8_t) {}
 int  analogRead(uint8_t) { return 0; }
 void analogReference(uint8_t) {}

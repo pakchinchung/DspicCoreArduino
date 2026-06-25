@@ -78,4 +78,43 @@ extern const uint8_t  NUM_PORTS;   /* number of valid entries in g_ports[]    */
 }
 #endif
 
+/* ---- PPS helpers (shared by HardwareSerial + SPI) ------------------------- *
+ * Peripheral Pin Select is by native pin NAME in this core. These convert a
+ * pin id to its PPS RPn and prep the pad (PPS does NOT make an analog pin
+ * digital, so clear ANSEL + set direction). Family-specific RPn numbering.     */
+#if defined(__dsPIC33C__) || defined(__dsPIC33A__)
+/* Native pin id -> PPS RPn, or 0xFF if the pin is not remappable. */
+static inline uint8_t dspic_pin_to_rp(uint8_t pin)
+{
+    uint8_t port = PIN_PORT(pin), bit = PIN_BIT(pin);
+#if defined(__dsPIC33C__)                 /* CK: only ports B/C/D remappable */
+    switch (port) {
+    case 1: return (uint8_t)(32 + bit);   /* RBn */
+    case 2: return (uint8_t)(48 + bit);   /* RCn */
+    case 3: return (uint8_t)(64 + bit);   /* RDn */
+    default: return 0xFF;
+    }
+#else                                      /* AK: RA=1+, RB=17+, RC=33+, RD=49+ */
+    switch (port) {
+    case 0: return (uint8_t)(1  + bit);
+    case 1: return (uint8_t)(17 + bit);
+    case 2: return (uint8_t)(33 + bit);
+    case 3: return (uint8_t)(49 + bit);
+    default: return 0xFF;
+    }
+#endif
+}
+
+/* Make a PPS pin digital and set its direction (output=1 / input=0). */
+static inline void dspic_pin_pps_cfg(uint8_t pin, int output)
+{
+    uint8_t port = PIN_PORT(pin);
+    if (port >= NUM_PORTS || !g_ports[port].tris) return;
+    dspic_sfr_t m = (dspic_sfr_t)1 << PIN_BIT(pin);
+    if (g_ports[port].ansel) *g_ports[port].ansel &= ~m;
+    if (output) *g_ports[port].tris &= ~m;
+    else        *g_ports[port].tris |=  m;
+}
+#endif
+
 #endif /* DSPIC_PINS_H */

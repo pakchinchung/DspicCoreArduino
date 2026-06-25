@@ -91,12 +91,41 @@ void          delayMicroseconds(unsigned int us);
 void interrupts(void);
 void noInterrupts(void);
 
+// ---- pin-change interrupts (attachInterrupt) ----
+// Edge modes (values follow the AVR convention; libraries use the names).
+// LOW/HIGH level-trigger is NOT supported (the CN hardware is edge-only).
+#define CHANGE   1
+#define FALLING  2
+#define RISING   3
+
+typedef void (*voidFuncPtr)(void);
+
+// Our pin model already uses native pin ids, so a "pin" IS the interrupt id —
+// digitalPinToInterrupt() is the identity (provided for sketch portability).
+#define digitalPinToInterrupt(p)  (p)
+
+void attachInterrupt(uint8_t pin, voidFuncPtr callback, int mode);
+void detachInterrupt(uint8_t pin);
+
+// ---- misc ----
+long map(long x, long in_min, long in_max, long out_min, long out_max);
+void yield(void);   // weak no-op (single-threaded); libraries may override
+
 // ---- exposed by user sketch (weak defaults in hooks.c) ----
 void setup(void);
 void loop(void);
 
 #ifdef __cplusplus
 } // extern "C"
+#endif
+
+// ---- C++-only declarations ----
+// random() is overloaded, which is illegal under C linkage, so it lives outside
+// the extern "C" block (matches the AVR core). Sketches/libraries are C++.
+#ifdef __cplusplus
+long random(long howbig);
+long random(long howsmall, long howbig);
+void randomSeed(unsigned long seed);
 #endif
 
 // ---- C++-only includes ----

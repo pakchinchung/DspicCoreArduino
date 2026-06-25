@@ -38,24 +38,39 @@ extern "C" const PortReg g_ports[] = {
 };
 extern "C" const uint8_t NUM_PORTS = (uint8_t)(sizeof(g_ports) / sizeof(g_ports[0]));
 
-// ---- Clock: FRC(8MHz) + PLL -> FOSC 200 MHz, FCY 100 MHz ----------
+// ---- Clock: FRC(8 MHz) + PLL, speed chosen by Tools > "Clock (CPU speed)" ----
+// The menu sets F_CPU (= FOSC); this picks the matching PLL dividers. For FRC-PLL
+// modes the silicon halves the PLL output, so FOSC = FPLLO/2 and FCY = FOSC/2:
+//   FCY = FPLLI*M/(N1*N2*N3)/4,  FPLLI = 8 MHz (FRC).
+//   VCO = FPLLI*M/N1 must be 400-1600 MHz; FPLLI 8-64 MHz.
+// Verified default: F_CPU=100 MHz -> FOSC 100 MHz, FCY 50 MHz.
 static void initClock(void)
 {
-    // PLL: FPLLIN = 8 MHz (N1=1), FVCO = 800 MHz (M=100),
-    //      FPLLO  = 200 MHz (POST1=4, POST2=1) -> FOSC 200 MHz, FCY 100 MHz.
+#if F_CPU == 8000000UL
+    // 8 MHz FRC, no PLL. FNOSC=FRC is the power-on default, so nothing to switch.
+    (void)0;
+#else
+  #if F_CPU == 200000000UL
+    // FOSC 200 MHz / FCY 100 MHz (max): FVCO=800, FPLLO=400, /2 -> FOSC 200.
     CLKDIVbits.PLLPRE   = 1;     // N1
-    PLLFBDbits.PLLFBDIV = 100;   // M
-    PLLDIVbits.POST1DIV = 4;     // N2
+    PLLFBDbits.PLLFBDIV = 100;   // M  -> FVCO = 8*100 = 800 MHz
+    PLLDIVbits.POST1DIV = 2;     // N2 -> FPLLO = 800/2 = 400 MHz -> FOSC 200
     PLLDIVbits.POST2DIV = 1;     // N3
+  #else  // F_CPU == 100000000UL (default): FOSC 100 MHz / FCY 50 MHz
+    CLKDIVbits.PLLPRE   = 1;     // N1
+    PLLFBDbits.PLLFBDIV = 100;   // M  -> FVCO = 800 MHz
+    PLLDIVbits.POST1DIV = 4;     // N2 -> FPLLO = 200 MHz -> FOSC 100
+    PLLDIVbits.POST2DIV = 1;     // N3
+  #endif
 
-    __builtin_write_OSCCONH(0x01);   // NOSC = FRCPLL
+    __builtin_write_OSCCONH(0x01);             // NOSC = FRCPLL
     __builtin_write_OSCCONL(OSCCONL | 0x01);   // request switch
 
-    // Wait for the switch + PLL lock, but BOUNDED so a simulator (where LOCK may
-    // never assert) cannot hang forever; on real silicon lock is reached early.
+    // Bounded wait for switch + PLL lock (a sim may never assert LOCK).
     for (uint16_t i = 0; i < 20000; i++) {
         if (OSCCONbits.OSWEN == 0 && OSCCONbits.LOCK) break;
     }
+#endif
 }
 
 // ---- initVariant — entry point called from main() ------------------

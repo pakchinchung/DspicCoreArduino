@@ -1,17 +1,18 @@
 /*
  * SpiLoopback - dspicArduino
  *
- * Internal SPI loopback: SDI is PPS-mapped to the SAME pin SDO drives (RP69),
+ * Internal SPI loopback: SDI is PPS-mapped to the SAME pin SDO drives (RD5),
  * so each SPI.transfer() reads back the byte it sent — no external wiring.
  * Results print on Serial (PKoB4 COM @ 9600).
  *
- * For real use, call SPI.setPins(SCK_RP, SDO_RP, SDI_RP) with distinct pins.
+ * Pins are chosen by native NAME. For real use, call
+ * SPI.setPins(sckPin, sdoPin, sdiPin) with distinct pins.
  */
 #include <SPI.h>
 
 void setup() {
     Serial.begin(9600);
-    SPI.setPins(70, 69, 69);   // SCK=RP70(RD6), SDO=RP69(RD5), SDI=RP69 (loopback)
+    SPI.setPins(RD6, RD5, RD5);   // SCK=RD6, SDO=RD5, SDI=RD5 (internal loopback)
     SPI.begin();
 }
 
