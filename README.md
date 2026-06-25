@@ -59,7 +59,9 @@ Legend: ✅ implemented & verified on hardware · 🟡 implemented, not yet hard
 | `Wire` / I²C (master) | ✅ | ✅ | AK verified against a PCF8574 LCD (0x27) |
 | `SPI` (master) | ✅ | ✅ | verified via loopback |
 | `attachInterrupt` (pin change) | ✅ | ✅ | Change Notification; AK ports A–D |
-| `tone` / `noTone` / `shiftOut` / `shiftIn` / `pulseIn` | ❌ | ❌ | advanced I/O — planned |
+| `tone` / `noTone` | ✅ | ✅ | non-blocking square wave via SCCP timer |
+| `shiftOut` / `shiftIn` | ✅ | ✅ | software bit-bang |
+| `pulseIn` / `pulseInLong` | ✅ | ✅ | microsecond pulse-width measurement |
 | `map` / `random` / `randomSeed`, math & `String` | ✅ | ✅ | family-agnostic |
 | `EEPROM` library (flash-emulated) | ✅ | ✅ | persists across reset (NVM page erase + quad-word program) |
 | Real C++ (classes / virtuals / global ctors) | ✅ | ✅ | C++-enabled GCC |

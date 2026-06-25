@@ -405,8 +405,22 @@ interface — so you can flash *and* monitor on the same cable.
   millis all correct at 200 MHz.
 - **AK HAL: COMPLETE** — digital I/O, millis/delay (Timer1), Serial/Serial1,
   analogRead, analogWrite/PWM, SPI, Wire/I2C, dacWrite, attachInterrupt, EEPROM.
-- **Cross-family gap (BOTH CK+AK):** Advanced I/O `tone`/`noTone`/`shiftOut`/
-  `shiftIn`/`pulseIn`/`pulseInLong` are not implemented yet (family-agnostic; next).
+- **Advanced I/O ✅ DONE on BOTH families (HW-verified):**
+  - `shiftOut`/`shiftIn` (`wiring_shift.cpp`) — canonical bit-bang on digitalWrite/Read.
+  - `pulseIn`/`pulseInLong` (`wiring_pulse.cpp`) — micros()-based width measure (both
+    identical here; sub-us resolution). Verified: tracks PWM duty exactly (50%->40/40us,
+    25%->20/60us on AK; tone loopback on CK).
+  - `tone`/`noTone` (`wiring_tone.cpp`) — non-blocking square wave via the **SCCP
+    module CCP1 as a timer**, period-match `_CCT1Interrupt` toggles the pin. CCP1/CCT1
+    exist on both families but register names DIFFER: AK = 32-bit `CCP1CON1`/`CCP1PR`/
+    `CCP1TMR` + `ON` bit; CK = 16-bit `CCP1CON1L`/`CCP1PRL`/`CCP1TMRL` + `CCPON` bit
+    (macro'd `T_CON`/`T_ON`/`T_PR`/`T_TMR` per family). **SCCP timebase (CLKSEL=Tcy)
+    differs: AK = FCY/2 (F_CPU/4), CK = FCY (F_CPU/2)** — measured on HW. Verified AK
+    1000/2000/4000 Hz, CK 1000/2000 Hz via pulseIn loopback.
+- **⚠ FIXED latent CK `micros()` 32-bit overflow** (`wiring.cpp`): the CK formula
+  `tmr*16000000UL/F_CPU` overflows for `tmr > ~268` (tmr ranges 0..~6250), so micros()
+  returned garbage — `delay()` never exposed it (it uses millis()), but `pulseIn`'s
+  timeout fired instantly -> always 0. Fixed to `tmr*16UL/(F_CPU/1000000UL)`.
 
 ### dsPIC33AK Curiosity board pin map (from DS70005556 DIM sheet + demo board PDF)
 Board = **Curiosity Platform Development Board (EV74H48A)** + **dsPIC33AK128MC106
@@ -548,11 +562,17 @@ ignores it. platform.txt size regex parses those decimal lines.
    `gh release create v<v> <zip> --repo pakchinchung/DspicCoreArduino --target master
    --title v<v> --notes "..."`. Verify: `curl -sL <asset url> | sha256sum` ==
    the index checksum, and byte size matches.
-8. Update `origin/master` **surgically** (origin is a curated distribution — do NOT
-   force-push dev's full tree, and do NOT dump dev's pruned `docs/`/internal handoff
-   into the public repo): `git worktree add <wt> origin/master`; copy ONLY the
-   changed publish files (`package_dspicArduino_index.json` + `README.md`); commit;
-   `git push origin <sha>:master`; `git worktree remove <wt> --force`.
+8. **Sync the FULL package source to `origin/master`** (board owner's standing rule:
+   "always sync full source to the public repo" — NOT a surgical index-only update,
+   and NOT a blind mirror of dev either). origin must contain everything an end user
+   needs: `cores/`, `variants/`, ALL `examples/`, `libraries/`, `docs/`, `boards.txt`,
+   `platform.txt`, `programmers.txt`, `tools/production` + `tools/xc16pp/bin` wrappers,
+   `README.md`, `package_dspicArduino_index.json`. EXCLUDE dev-only items: **`spike/`,
+   `CLAUDE.md`** (and the C++ compiler binaries under `tools/xc16pp/dspic-cpp-toolchain-win`
+   stay gitignored — they ship ONLY inside the release zip). Procedure:
+   `git worktree add <wt> origin/master`; `cd <wt>`; `git read-tree dev/master`
+   (index := full dev tree); `git rm -rq CLAUDE.md spike`; `git commit`;
+   `git push origin HEAD:master`; `git worktree remove <wt> --force`.
 9. **Post-release E2E test**: `core update-index` + `core install` + `compile` from the
    REAL raw-GitHub index URL into a clean `--config-dir` (raw.githubusercontent CDN
    can lag ≤5 min). 0.1.5 passed: CK Blink + AK AkBlink both compiled.

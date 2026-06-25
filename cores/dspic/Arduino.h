@@ -107,6 +107,14 @@ typedef void (*voidFuncPtr)(void);
 void attachInterrupt(uint8_t pin, voidFuncPtr callback, int mode);
 void detachInterrupt(uint8_t pin);
 
+// ---- advanced I/O ----
+void          shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, uint8_t val);
+uint8_t       shiftIn(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder);
+unsigned long pulseIn(uint8_t pin, uint8_t state, unsigned long timeout);
+unsigned long pulseInLong(uint8_t pin, uint8_t state, unsigned long timeout);
+void          tone(uint8_t pin, unsigned int frequency, unsigned long duration);
+void          noTone(uint8_t pin);
+
 // ---- misc ----
 long map(long x, long in_min, long in_max, long out_min, long out_max);
 void yield(void);   // weak no-op (single-threaded); libraries may override
@@ -126,6 +134,12 @@ void loop(void);
 long random(long howbig);
 long random(long howsmall, long howbig);
 void randomSeed(unsigned long seed);
+
+// Default-argument conveniences (sketches are C++): pulseIn(pin,state) uses a 1 s
+// timeout; tone(pin,freq) plays until noTone().
+inline unsigned long pulseIn(uint8_t pin, uint8_t state) { return pulseIn(pin, state, 1000000UL); }
+inline unsigned long pulseInLong(uint8_t pin, uint8_t state) { return pulseInLong(pin, state, 1000000UL); }
+inline void tone(uint8_t pin, unsigned int frequency) { tone(pin, frequency, 0UL); }
 #endif
 
 // ---- C++-only includes ----

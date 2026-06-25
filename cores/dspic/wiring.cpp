@@ -137,9 +137,9 @@ unsigned long micros(void)
     m   = _millis_count;
     tmr = TMR1;
     __builtin_disi(0x0000);
-    // Each Timer1 tick = 1/(FCY/8) seconds.  Convert to microseconds.
-    // tick_us = 8 * 1000000 / (F_CPU/2) = 16000000 / F_CPU
-    return m * 1000UL + ((unsigned long)tmr * 16000000UL / F_CPU);
+    // Each Timer1 tick = 1/(FCY/8) s = 16000000/F_CPU us. Compute as 16/(F_CPU/1e6)
+    // so the multiply can't overflow 32-bit (tmr*16000000 would, for tmr>~268).
+    return m * 1000UL + ((unsigned long)tmr * 16UL / (F_CPU / 1000000UL));
 }
 
 void delay(unsigned long ms)
